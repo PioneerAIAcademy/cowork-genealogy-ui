@@ -1,19 +1,25 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import icon from '../../resources/icon.png?asset'
+import { setupMenu } from './menu'
 
 function createWindow(): void {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    height: 800,
     show: false,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false
     }
   })
 
@@ -21,13 +27,7 @@ function createWindow(): void {
     mainWindow.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
+  // HMR for renderer based on electron-vite cli.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -35,40 +35,96 @@ function createWindow(): void {
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+// --- CSP header (§3.2) ---
+// Skipped in dev mode: Vite HMR injects inline scripts and uses eval,
+// which script-src 'self' would block. Production CSP is enforced via header.
+function setupCSP(): void {
+  if (is.dev) return
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self';",
+          "script-src 'self';",
+          "style-src 'self' 'unsafe-inline';",
+          "img-src 'self' data:;",
+          "font-src 'self' data:;",
+          "connect-src 'self';",
+          "object-src 'none';",
+          "base-uri 'none';",
+          "frame-ancestors 'none';"
+        ].join(' ')
+      }
+    })
+  })
+}
+
+// --- IPC handlers (§3.5, §3.6) ---
+function setupIPC(): void {
+  ipcMain.handle('open-file', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'JSON / Markdown', extensions: ['json', 'md', 'markdown'] }]
+    })
+    if (canceled || filePaths.length === 0) return null
+    const filePath = filePaths[0]
+    if (filePath.includes('\0')) throw new Error('Invalid path')
+    const ext = path.extname(filePath).toLowerCase()
+    if (!['.json', '.md', '.markdown'].includes(ext)) throw new Error('Unsupported file type')
+    const stat = await fs.stat(filePath)
+    if (stat.size > 50 * 1024 * 1024) throw new Error('File too large')
+    const content = await fs.readFile(filePath, 'utf8')
+    return { filePath, content, ext }
+  })
+
+  ipcMain.handle('open-external', async (_e, url: string) => {
+    if (typeof url !== 'string') return
+    try {
+      const parsed = new URL(url)
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        await shell.openExternal(url)
+      }
+    } catch {
+      // Malformed URL — silently ignore
+    }
+  })
+
+  ipcMain.handle('get-version', () => {
+    return app.getVersion()
+  })
+}
+
+// --- Block navigation and new windows (§3.7) ---
+function setupNavigationBlocking(): void {
+  app.on('web-contents-created', (_e, contents) => {
+    contents.on('will-navigate', (e) => e.preventDefault())
+    contents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  })
+}
+
+// --- App lifecycle ---
+app.whenReady().then(() => {
+  electronApp.setAppUserModelId('com.pioneeracademy.researchviewer')
+
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
+  setupCSP()
+  setupIPC()
+  setupNavigationBlocking()
+  setupMenu()
   createWindow()
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
+  app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
