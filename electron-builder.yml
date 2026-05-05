@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: cowork-genealogy-ui
+appId: com.pioneeracademy.researchviewer
+productName: Research Viewer
 directories:
   buildResources: build
 files:
@@ -11,33 +11,53 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
-win:
-  executableName: cowork-genealogy-ui
-nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+
 mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
+
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  sign: false
+  artifactName: ${name}-${version}-${arch}.${ext}
+
+win:
+  executableName: research-viewer
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Research Viewer
+  artifactName: ${name}-${version}-setup.${ext}
+
 linux:
   target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
+    - target: AppImage
+      arch: [x64]
   category: Utility
+  synopsis: Genealogy research file viewer
+  description: |
+    View research.json and tree.gedcomx.json files from the genealogy
+    research assistant. Offline-first. No telemetry.
+  icon: build/icon.png
+
 appImage:
   artifactName: ${name}-${version}.${ext}
+
 npmRebuild: false
+
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
