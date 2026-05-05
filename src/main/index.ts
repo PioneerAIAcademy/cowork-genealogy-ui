@@ -83,7 +83,7 @@ function setupIPC(): void {
     if (typeof url !== 'string') return
     try {
       const parsed = new URL(url)
-      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      if (parsed.protocol === 'https:') {
         await shell.openExternal(url)
       }
     } catch {

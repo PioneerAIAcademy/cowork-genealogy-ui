@@ -1,4 +1,5 @@
 import { Menu, shell, app, dialog } from 'electron'
+import { is } from '@electron-toolkit/utils'
 
 const isMac = process.platform === 'darwin'
 
@@ -44,7 +45,7 @@ const template: Electron.MenuItemConstructorOptions[] = [
     submenu: [
       { role: 'reload' },
       { role: 'forceReload' },
-      { role: 'toggleDevTools' },
+      ...(is.dev ? [{ role: 'toggleDevTools' as const }] : []),
       { type: 'separator' },
       { role: 'resetZoom' },
       { role: 'zoomIn' },
