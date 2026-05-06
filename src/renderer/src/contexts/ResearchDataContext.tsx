@@ -11,6 +11,7 @@ export interface ResearchDataState {
   research: ResearchData | null
   gedcomx: GedcomxData | null
   error: string | null
+  clearError: () => void
   lastUpdated: Date | null
   folderPath: string | null
   devMode: boolean
@@ -137,6 +138,8 @@ export function ResearchDataProvider({ children }: { children: ReactNode }): Rea
     [index]
   )
 
+  const clearError = useCallback(() => setError(null), [])
+
   const selectFolder = useCallback(async () => {
     const path = await window.api.selectFolder()
     if (path) {
@@ -150,6 +153,7 @@ export function ResearchDataProvider({ children }: { children: ReactNode }): Rea
       research,
       gedcomx,
       error,
+      clearError,
       lastUpdated,
       folderPath,
       devMode,
@@ -163,6 +167,7 @@ export function ResearchDataProvider({ children }: { children: ReactNode }): Rea
       research,
       gedcomx,
       error,
+      clearError,
       lastUpdated,
       folderPath,
       devMode,

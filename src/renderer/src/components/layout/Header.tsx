@@ -1,23 +1,25 @@
+import { useState, useCallback } from 'react'
 import { useResearchData } from '../../contexts/ResearchDataContext'
 import styles from './Header.module.css'
 
-function useTheme(): { theme: string; toggle: () => void } {
+function getInitialTheme(): string {
   const stored = localStorage.getItem('theme') || 'light'
-  const toggle = (): void => {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
-    document.documentElement.dataset.theme = next
-    localStorage.setItem('theme', next)
-  }
-  // Initialize on first render
   if (document.documentElement.dataset.theme == null) {
     document.documentElement.dataset.theme = stored
   }
-  return { theme: document.documentElement.dataset.theme || stored, toggle }
+  return stored
 }
 
 export default function Header(): React.JSX.Element {
-  const { devMode, setDevMode, lastUpdated, error } = useResearchData()
-  const { theme, toggle: toggleTheme } = useTheme()
+  const { devMode, setDevMode, lastUpdated, error, clearError } = useResearchData()
+  const [theme, setTheme] = useState(getInitialTheme)
+
+  const toggleTheme = useCallback(() => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = next
+    localStorage.setItem('theme', next)
+    setTheme(next)
+  }, [theme])
 
   return (
     <header className={styles.header}>
@@ -46,7 +48,7 @@ export default function Header(): React.JSX.Element {
       {error && (
         <div className={styles.errorBanner}>
           <span>{error}</span>
-          <button className={styles.dismiss} onClick={() => {}}>
+          <button className={styles.dismiss} onClick={clearError}>
             ✕
           </button>
         </div>
