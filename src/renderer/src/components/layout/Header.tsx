@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useResearchData } from '../../contexts/ResearchDataContext'
+import FeedbackDialog from '../shared/FeedbackDialog'
 import styles from './Header.module.css'
 
 function getInitialTheme(): string {
@@ -13,6 +14,7 @@ function getInitialTheme(): string {
 export default function Header(): React.JSX.Element {
   const { devMode, setDevMode, lastUpdated, error, clearError } = useResearchData()
   const [theme, setTheme] = useState(getInitialTheme)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   const toggleTheme = useCallback(() => {
     const next = theme === 'dark' ? 'light' : 'dark'
@@ -22,6 +24,7 @@ export default function Header(): React.JSX.Element {
   }, [theme])
 
   return (
+    <>
     <header className={styles.header}>
       <div className={styles.title}>Research Viewer</div>
       <div className={styles.controls}>
@@ -30,6 +33,13 @@ export default function Header(): React.JSX.Element {
             Updated {lastUpdated.toLocaleTimeString()}
           </span>
         )}
+        <button
+          className={styles.toggle}
+          onClick={() => setShowFeedback(true)}
+          title="Share feedback"
+        >
+          Share
+        </button>
         <button
           className={`${styles.toggle} ${devMode ? styles.active : ''}`}
           onClick={() => setDevMode(!devMode)}
@@ -54,5 +64,7 @@ export default function Header(): React.JSX.Element {
         </div>
       )}
     </header>
+    {showFeedback && <FeedbackDialog onClose={() => setShowFeedback(false)} />}
+    </>
   )
 }
