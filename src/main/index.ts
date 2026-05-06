@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import os from 'node:os'
 import icon from '../../resources/icon.png?asset'
 import { setupMenu } from './menu'
 import { startWatching, stopWatching, getCurrentState } from './watcher'
@@ -141,6 +142,61 @@ function setupIPC(): void {
       return { ok: true, ...result }
     }
   )
+
+  ipcMain.handle('session:get-log', async () => {
+    const state = getCurrentState()
+    if (!state.folderPath) return { entries: [], sizeBytes: 0 }
+
+    // Claude Code stores sessions in ~/.claude/projects/<path-with-dashes>/
+    const projectHash = state.folderPath.replace(/^\//, '').replace(/\//g, '-')
+    const claudeProjectDir = path.join(os.homedir(), '.claude', 'projects', `-${projectHash}`)
+
+    try {
+      const files = await fs.readdir(claudeProjectDir)
+      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'))
+      if (jsonlFiles.length === 0) return { entries: [], sizeBytes: 0 }
+
+      // Find the most recently modified JSONL (the active session)
+      const stats = await Promise.all(
+        jsonlFiles.map(async (f) => {
+          const filePath = path.join(claudeProjectDir, f)
+          const stat = await fs.stat(filePath)
+          return { filePath, mtime: stat.mtimeMs }
+        })
+      )
+      stats.sort((a, b) => b.mtime - a.mtime)
+      const activeFile = stats[0].filePath
+
+      const raw = await fs.readFile(activeFile, 'utf8')
+      const lines = raw.split('\n').filter((l) => l.trim())
+
+      const entries: unknown[] = []
+      for (const line of lines) {
+        try {
+          const entry = JSON.parse(line)
+          // Only include user and assistant message entries
+          if (entry.type !== 'user' && entry.type !== 'assistant') continue
+          // Filter to entries matching the project folder
+          if (entry.cwd && entry.cwd !== state.folderPath) continue
+          // Strip thinking blocks from assistant messages
+          if (entry.type === 'assistant' && entry.message?.content) {
+            entry.message.content = entry.message.content.filter(
+              (block: { type?: string }) => block.type !== 'thinking'
+            )
+          }
+          entries.push(entry)
+        } catch {
+          // Skip malformed lines
+        }
+      }
+
+      const sizeBytes = new TextEncoder().encode(JSON.stringify(entries)).length
+      return { entries, sizeBytes }
+    } catch {
+      // Directory doesn't exist or can't be read
+      return { entries: [], sizeBytes: 0 }
+    }
+  })
 
   ipcMain.handle('project:get-state', () => {
     return getCurrentState()

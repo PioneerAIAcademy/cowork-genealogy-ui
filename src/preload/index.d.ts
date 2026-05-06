@@ -6,6 +6,7 @@ export interface AppAPI {
   onGedcomxUpdated: (callback: (data: unknown) => void) => void
   onWatchError: (callback: (error: string) => void) => void
   removeAllWatchListeners: () => void
+  getSessionLog: () => Promise<{ entries: unknown[]; sizeBytes: number }>
   selectFolder: () => Promise<string | null>
   getState: () => Promise<{ folderPath: string | null; research: unknown; gedcomx: unknown }>
   submitFeedback: (payload: {

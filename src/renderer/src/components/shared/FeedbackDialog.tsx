@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useResearchData } from '../../contexts/ResearchDataContext'
 import styles from './FeedbackDialog.module.css'
 
@@ -23,13 +23,29 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
 
   const [includeResearch, setIncludeResearch] = useState(true)
   const [includeGedcomx, setIncludeGedcomx] = useState(true)
+  const [includeSessionLog, setIncludeSessionLog] = useState(true)
+  const [sessionLog, setSessionLog] = useState<unknown[] | null>(null)
+  const [sessionLogSize, setSessionLogSize] = useState(0)
   const [userComment, setUserComment] = useState('')
   const [sendState, setSendState] = useState<SendState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
+  // Load session log when dialog opens
+  useEffect(() => {
+    window.api.getSessionLog().then(({ entries, sizeBytes }) => {
+      setSessionLog(entries)
+      setSessionLogSize(sizeBytes)
+    })
+  }, [])
+
   const hasResearch = research != null
   const hasGedcomx = gedcomx != null
-  const hasAnythingToSend = (includeResearch && hasResearch) || (includeGedcomx && hasGedcomx) || userComment.trim().length > 0
+  const hasSessionLog = sessionLog != null && sessionLog.length > 0
+  const hasAnythingToSend =
+    (includeResearch && hasResearch) ||
+    (includeGedcomx && hasGedcomx) ||
+    (includeSessionLog && hasSessionLog) ||
+    userComment.trim().length > 0
 
   const handleSend = useCallback(async () => {
     setSendState('sending')
@@ -38,6 +54,7 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
       await window.api.submitFeedback({
         research: includeResearch ? research ?? undefined : undefined,
         gedcomx: includeGedcomx ? gedcomx ?? undefined : undefined,
+        sessionLog: includeSessionLog && hasSessionLog ? sessionLog : undefined,
         userComment: userComment.trim() || undefined
       })
       setSendState('success')
@@ -46,7 +63,7 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
       setSendState('error')
       setErrorMsg(err instanceof Error ? err.message : 'Failed to send feedback')
     }
-  }, [includeResearch, includeGedcomx, userComment, research, gedcomx, onClose])
+  }, [includeResearch, includeGedcomx, includeSessionLog, hasSessionLog, sessionLog, userComment, research, gedcomx, onClose])
 
   const handleOverlayClick = useCallback(
     (e: React.MouseEvent) => {
@@ -59,7 +76,7 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
     <div className={styles.overlay} onClick={handleOverlayClick}>
       <div className={styles.dialog}>
         <div className={styles.header}>
-          <span className={styles.headerTitle}>Share Feedback</span>
+          <span className={styles.headerTitle}>Send Feedback</span>
           <button className={styles.close} onClick={onClose} title="Close">
             ✕
           </button>
@@ -92,6 +109,19 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
               <span className={styles.labelText}>tree.gedcomx.json</span>
               {hasGedcomx && <span className={styles.size}>{formatBytes(byteSize(gedcomx))}</span>}
             </label>
+
+            <label
+              className={`${styles.checkboxLabel} ${!hasSessionLog ? styles.disabledLabel : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={includeSessionLog && hasSessionLog}
+                disabled={!hasSessionLog}
+                onChange={(e) => setIncludeSessionLog(e.target.checked)}
+              />
+              <span className={styles.labelText}>Claude Code session log</span>
+              {hasSessionLog && <span className={styles.size}>{formatBytes(sessionLogSize)}</span>}
+            </label>
           </div>
 
           <textarea
@@ -103,7 +133,8 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
 
           <div className={styles.privacy}>
             Your data is shared only when you click Send. It is stored in a private Google Drive
-            folder accessible only to the Pioneer Academy team.
+            folder accessible only to the Pioneer Academy team. The session log includes tool calls
+            and their results but does not include Claude&apos;s internal thinking.
           </div>
         </div>
 

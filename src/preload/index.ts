@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners('project:gedcomx-updated')
     ipcRenderer.removeAllListeners('project:watch-error')
   },
+  getSessionLog: () => ipcRenderer.invoke('session:get-log'),
   selectFolder: () => ipcRenderer.invoke('project:select-folder'),
   getState: () => ipcRenderer.invoke('project:get-state'),
   submitFeedback: (payload: {
