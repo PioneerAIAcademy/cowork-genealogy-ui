@@ -102,8 +102,8 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
           />
 
           <div className={styles.privacy}>
-            Your data is shared only when you click Send. Research data is sent to a local server
-            at localhost:3000. No data is transmitted to external services.
+            Your data is shared only when you click Send. It is stored in a private Google Drive
+            folder accessible only to the Pioneer Academy team.
           </div>
         </div>
 

@@ -56,7 +56,7 @@ function setupCSP(): void {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
           "img-src 'self' data:;",
           "font-src 'self' data: https://fonts.gstatic.com;",
-          "connect-src 'self' http://localhost:3000;",
+          "connect-src 'self' http://localhost:3000 https://script.google.com https://script.googleusercontent.com;",
           "object-src 'none';",
           "base-uri 'none';",
           "frame-ancestors 'none';"
@@ -122,7 +122,10 @@ function setupIPC(): void {
         viewerVersion: app.getVersion()
       })
 
-      const res = await fetch('http://localhost:3000/feedback', {
+      const endpoint =
+        process.env.FEEDBACK_URL || 'http://localhost:3000/feedback'
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body
@@ -131,7 +134,9 @@ function setupIPC(): void {
       if (!res.ok) {
         throw new Error(`Server responded with ${res.status}`)
       }
-      return { ok: true }
+
+      const result = await res.json().catch(() => ({}))
+      return { ok: true, ...result }
     }
   )
 
