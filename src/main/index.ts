@@ -5,9 +5,12 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import icon from '../../resources/icon.png?asset'
 import { setupMenu } from './menu'
+import { startWatching, stopWatching, getCurrentState } from './watcher'
+
+let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
-  const mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 1200,
     height: 800,
     show: false,
@@ -23,15 +26,17 @@ function createWindow(): void {
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  mainWindow = win
+
+  win.on('ready-to-show', () => {
+    win.show()
   })
 
   // HMR for renderer based on electron-vite cli.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 
@@ -48,9 +53,9 @@ function setupCSP(): void {
         'Content-Security-Policy': [
           "default-src 'self';",
           "script-src 'self';",
-          "style-src 'self' 'unsafe-inline';",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
           "img-src 'self' data:;",
-          "font-src 'self' data:;",
+          "font-src 'self' data: https://fonts.gstatic.com;",
           "connect-src 'self';",
           "object-src 'none';",
           "base-uri 'none';",
@@ -94,6 +99,21 @@ function setupIPC(): void {
   ipcMain.handle('get-version', () => {
     return app.getVersion()
   })
+
+  ipcMain.handle('project:get-state', () => {
+    return getCurrentState()
+  })
+
+  ipcMain.handle('project:select-folder', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    })
+    if (canceled || filePaths.length === 0) return null
+    const folderPath = filePaths[0]
+    stopWatching()
+    startWatching(folderPath, mainWindow!)
+    return folderPath
+  })
 }
 
 // --- Block navigation and new windows (§3.7) ---
@@ -117,6 +137,11 @@ app.whenReady().then(() => {
   setupNavigationBlocking()
   setupMenu()
   createWindow()
+
+  const projectDirIndex = process.argv.indexOf('--project-dir')
+  if (projectDirIndex !== -1 && process.argv[projectDirIndex + 1]) {
+    startWatching(process.argv[projectDirIndex + 1], mainWindow!)
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
