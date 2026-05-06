@@ -19,5 +19,11 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners('project:watch-error')
   },
   selectFolder: () => ipcRenderer.invoke('project:select-folder'),
-  getState: () => ipcRenderer.invoke('project:get-state')
+  getState: () => ipcRenderer.invoke('project:get-state'),
+  submitFeedback: (payload: {
+    research?: unknown
+    gedcomx?: unknown
+    sessionLog?: unknown[]
+    userComment?: string
+  }) => ipcRenderer.invoke('feedback:submit', payload)
 })

@@ -8,6 +8,12 @@ export interface AppAPI {
   removeAllWatchListeners: () => void
   selectFolder: () => Promise<string | null>
   getState: () => Promise<{ folderPath: string | null; research: unknown; gedcomx: unknown }>
+  submitFeedback: (payload: {
+    research?: unknown
+    gedcomx?: unknown
+    sessionLog?: unknown[]
+    userComment?: string
+  }) => Promise<{ ok: true }>
 }
 
 declare global {

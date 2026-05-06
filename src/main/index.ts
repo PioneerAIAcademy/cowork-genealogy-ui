@@ -56,7 +56,7 @@ function setupCSP(): void {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
           "img-src 'self' data:;",
           "font-src 'self' data: https://fonts.gstatic.com;",
-          "connect-src 'self';",
+          "connect-src 'self' http://localhost:3000;",
           "object-src 'none';",
           "base-uri 'none';",
           "frame-ancestors 'none';"
@@ -99,6 +99,41 @@ function setupIPC(): void {
   ipcMain.handle('get-version', () => {
     return app.getVersion()
   })
+
+  ipcMain.handle(
+    'feedback:submit',
+    async (
+      _e,
+      payload: {
+        research?: unknown
+        gedcomx?: unknown
+        sessionLog?: unknown[]
+        userComment?: string
+      }
+    ) => {
+      const state = getCurrentState()
+      const body = JSON.stringify({
+        timestamp: new Date().toISOString(),
+        projectFolder: state.folderPath,
+        research: payload.research,
+        gedcomx: payload.gedcomx,
+        sessionLog: payload.sessionLog,
+        userComment: payload.userComment,
+        viewerVersion: app.getVersion()
+      })
+
+      const res = await fetch('http://localhost:3000/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body
+      })
+
+      if (!res.ok) {
+        throw new Error(`Server responded with ${res.status}`)
+      }
+      return { ok: true }
+    }
+  )
 
   ipcMain.handle('project:get-state', () => {
     return getCurrentState()
