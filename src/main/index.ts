@@ -122,8 +122,10 @@ function setupIPC(): void {
         viewerVersion: app.getVersion()
       })
 
+      // Production: Apps Script endpoint. Override with FEEDBACK_URL env var for local dev.
       const endpoint =
-        process.env.FEEDBACK_URL || 'http://localhost:3000/feedback'
+        process.env.FEEDBACK_URL ||
+        'https://script.google.com/macros/s/AKfycbxcMvfhpCqLzSa5sZBrssr48QfqrpFhW9DMRkxG8RYQfGGJIXoCEzbyPHrpT1XWZzcs/exec'
 
       const res = await fetch(endpoint, {
         method: 'POST',

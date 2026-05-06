@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react'
 import { useResearchData } from '../../contexts/ResearchDataContext'
 import styles from './Sidebar.module.css'
 
@@ -7,8 +8,25 @@ interface SectionItem {
   countFn: () => number
 }
 
+function getInitialTheme(): string {
+  const stored = localStorage.getItem('theme') || 'light'
+  if (document.documentElement.dataset.theme == null) {
+    document.documentElement.dataset.theme = stored
+  }
+  return stored
+}
+
 export default function Sidebar(): React.JSX.Element {
-  const { research, folderPath, activeSection, setActiveSection } = useResearchData()
+  const { research, folderPath, activeSection, setActiveSection, devMode, setDevMode, lastUpdated } =
+    useResearchData()
+  const [theme, setTheme] = useState(getInitialTheme)
+
+  const toggleTheme = useCallback(() => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = next
+    localStorage.setItem('theme', next)
+    setTheme(next)
+  }, [theme])
 
   const sections: SectionItem[] = [
     { key: 'project_overview', label: 'Project Overview', countFn: () => (research?.project ? 1 : 0) },
@@ -50,14 +68,37 @@ export default function Sidebar(): React.JSX.Element {
           )
         })}
       </div>
-      <div className={styles.watchStatus}>
-        {folderPath ? (
-          <span className={styles.watching} title={folderPath}>
-            ● Watching
+      <div className={styles.footer}>
+        {lastUpdated && (
+          <span className={styles.timestamp}>
+            Updated {lastUpdated.toLocaleTimeString()}
           </span>
-        ) : (
-          <span className={styles.notWatching}>No folder selected</span>
         )}
+        <div className={styles.footerControls}>
+          <button
+            className={`${styles.footerToggle} ${devMode ? styles.active : ''}`}
+            onClick={() => setDevMode(!devMode)}
+            title="Toggle developer mode"
+          >
+            {'</>'}
+          </button>
+          <button
+            className={styles.footerToggle}
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? '☀' : '☽'}
+          </button>
+        </div>
+        <div className={styles.watchStatus}>
+          {folderPath ? (
+            <span className={styles.watching} title={folderPath}>
+              Watching
+            </span>
+          ) : (
+            <span className={styles.notWatching}>No folder selected</span>
+          )}
+        </div>
       </div>
     </nav>
   )
