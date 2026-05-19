@@ -47,6 +47,18 @@ export type DateCertainty =
   | 'after'
   | 'between'
 
+export type ExperienceLevel = 'novice' | 'intermediate' | 'experienced' | 'professional'
+
+export type Subscription =
+  | 'Ancestry'
+  | 'MyHeritage'
+  | 'FindMyPast'
+  | 'Newspapers.com'
+  | 'GenealogyBank'
+  | 'FindAGrave-Plus'
+  | 'other'
+  | 'none'
+
 // ============================================================
 // research.json section types
 // ============================================================
@@ -58,6 +70,12 @@ export interface Project {
   status: ProjectStatus
   created: string
   updated: string
+}
+
+export interface ResearcherProfile {
+  experience_level?: ExperienceLevel
+  subscriptions?: Subscription[]
+  narration_guidance?: string
 }
 
 export interface StopCriteria {
@@ -218,8 +236,10 @@ export interface TimelineEvent {
   date_certainty: string
   event_type: string
   place: string | null
+  place_id?: string | null
   description: string
   assertion_ids: string[]
+  distance_from_previous_km?: number | null
 }
 
 export interface TimelineGap {
@@ -259,6 +279,7 @@ export interface ProofSummary {
 
 export interface ResearchData {
   project: Project
+  researcher_profile?: ResearcherProfile
   questions: Question[]
   plans: Plan[]
   log: LogEntry[]
@@ -301,6 +322,7 @@ export interface GedcomxFact {
 
 export interface GedcomxPerson {
   id: string
+  ark?: string
   gender: 'Male' | 'Female' | 'Unknown'
   names: GedcomxName[]
   facts?: GedcomxFact[]
@@ -311,6 +333,8 @@ export interface GedcomxParentChildRelationship {
   type: 'ParentChild'
   parent: string
   child: string
+  subtype?: string
+  notes?: string[]
   sources?: GedcomxSourceRef[]
 }
 
@@ -320,6 +344,7 @@ export interface GedcomxCoupleRelationship {
   person1: string
   person2: string
   facts?: GedcomxFact[]
+  notes?: string[]
   sources?: GedcomxSourceRef[]
 }
 

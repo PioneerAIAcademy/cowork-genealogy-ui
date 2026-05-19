@@ -46,3 +46,12 @@
   color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
 }
+
+.ark {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+.ark:hover {
+  text-decoration: underline;
+}

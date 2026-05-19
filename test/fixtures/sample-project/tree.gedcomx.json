@@ -2,6 +2,7 @@
   "persons": [
     {
       "id": "I1",
+      "ark": "https://familysearch.org/ark:/61903/4:1:KGS8-LY1",
       "gender": "Male",
       "names": [
         {
@@ -159,6 +160,10 @@
       "type": "ParentChild",
       "parent": "I3",
       "child": "I1",
+      "subtype": "Step",
+      "notes": [
+        "Bridget appears as Thomas's wife in the 1850 census but Patrick (age 5) is listed without a maternal indicator. Family lore preserved in a 1955 descendant interview holds that Patrick's birth mother died during the passage from Ireland and that Bridget — Thomas's second wife — raised him as her own."
+      ],
       "sources": [
         { "ref": "S1", "page": "1850 Census, Schuylkill Co., dwelling 84", "quality": 1 }
       ]
@@ -175,6 +180,9 @@
           "date": "before 1845",
           "place": "Ireland"
         }
+      ],
+      "notes": [
+        "Marriage place 'Ireland' is inferred from the family origin; no civil or parish record has been located."
       ],
       "sources": [
         { "ref": "S1", "page": "1850 Census, co-enumerated as household head and wife" }

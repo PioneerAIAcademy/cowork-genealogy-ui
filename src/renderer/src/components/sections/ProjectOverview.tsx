@@ -2,8 +2,9 @@ import { useMemo } from 'react'
 import { useResearchData } from '../../contexts/ResearchDataContext'
 import StatusBadge from '../shared/StatusBadge'
 import PersonCard from '../shared/PersonCard'
-import type { GedcomxPerson, GedcomxRelationship } from '../../lib/schema'
+import type { GedcomxPerson, GedcomxRelationship, ResearcherProfile } from '../../lib/schema'
 import { getPreferredName } from '../../lib/schema'
+import { parentChildLabel, describeRelationship } from '../../lib/relationship-label'
 import styles from './ProjectOverview.module.css'
 
 function deriveRelationship(
@@ -16,17 +17,17 @@ function deriveRelationship(
     if (rel.type === 'ParentChild') {
       if (rel.child === personId && subjectIds.includes(rel.parent)) {
         const parent = persons.find((p) => p.id === rel.parent)
-        return parent ? `Child of ${getPreferredName(parent)}` : 'Child'
+        return parentChildLabel(rel, parent ? getPreferredName(parent) : 'subject', 'child')
       }
       if (rel.parent === personId && subjectIds.includes(rel.child)) {
         const child = persons.find((p) => p.id === rel.child)
-        return child ? `Parent of ${getPreferredName(child)}` : 'Parent'
+        return parentChildLabel(rel, child ? getPreferredName(child) : 'subject', 'parent')
       }
       if (subjectIds.includes(rel.parent) && rel.child === personId) {
-        return 'Child'
+        return parentChildLabel(rel, '', 'child').replace(' of ', '')
       }
       if (subjectIds.includes(rel.child) && rel.parent === personId) {
-        return 'Parent'
+        return parentChildLabel(rel, '', 'parent').replace(' of ', '')
       }
     }
     if (rel.type === 'Couple') {
@@ -41,12 +42,44 @@ function deriveRelationship(
   return undefined
 }
 
+function ResearcherProfileBlock({ profile }: { profile: ResearcherProfile }): React.JSX.Element {
+  const subs = profile.subscriptions?.filter((s) => s !== 'none') ?? []
+  return (
+    <div className={styles.profileBox}>
+      <div className={styles.profileRow}>
+        {profile.experience_level && (
+          <span className={styles.profileBadge}>{profile.experience_level}</span>
+        )}
+        {subs.length > 0 && <span className={styles.profileSubs}>{subs.join(', ')}</span>}
+        {subs.length === 0 && (
+          <span className={styles.profileSubsEmpty}>No paid subscriptions</span>
+        )}
+      </div>
+      {profile.narration_guidance && (
+        <div className={styles.profileGuidance}>{profile.narration_guidance}</div>
+      )}
+    </div>
+  )
+}
+
+interface NotedRelationship {
+  id: string
+  description: string
+  notes: string[]
+}
+
 export default function ProjectOverview(): React.JSX.Element {
   const { research, gedcomx } = useResearchData()
   const project = research?.project
+  const profile = research?.researcher_profile
 
-  const { subjectPersons, otherPersons } = useMemo(() => {
-    if (!gedcomx) return { subjectPersons: [] as GedcomxPerson[], otherPersons: [] as { person: GedcomxPerson; relationship?: string }[] }
+  const { subjectPersons, otherPersons, notedRelationships } = useMemo(() => {
+    if (!gedcomx)
+      return {
+        subjectPersons: [] as GedcomxPerson[],
+        otherPersons: [] as { person: GedcomxPerson; relationship?: string }[],
+        notedRelationships: [] as NotedRelationship[]
+      }
 
     const subjectIds = project?.subject_person_ids ?? []
     const subjects = subjectIds
@@ -60,7 +93,15 @@ export default function ProjectOverview(): React.JSX.Element {
         relationship: deriveRelationship(p.id, subjectIds, gedcomx.relationships, gedcomx.persons)
       }))
 
-    return { subjectPersons: subjects, otherPersons: others }
+    const noted: NotedRelationship[] = gedcomx.relationships
+      .filter((r) => Array.isArray(r.notes) && r.notes.length > 0)
+      .map((r) => ({
+        id: r.id,
+        description: describeRelationship(r, gedcomx.persons),
+        notes: r.notes as string[]
+      }))
+
+    return { subjectPersons: subjects, otherPersons: others, notedRelationships: noted }
   }, [gedcomx, project])
 
   if (!project) {
@@ -84,6 +125,13 @@ export default function ProjectOverview(): React.JSX.Element {
         <span>Updated {project.updated}</span>
       </div>
 
+      {profile && (
+        <>
+          <h3 className={styles.subHeading}>Researcher Profile</h3>
+          <ResearcherProfileBlock profile={profile} />
+        </>
+      )}
+
       <h3 className={styles.subHeading}>Subject Persons</h3>
       {project.subject_person_ids === null || project.subject_person_ids.length === 0 ? (
         <p className={styles.notIdentified}>Subject not yet identified</p>
@@ -103,6 +151,24 @@ export default function ProjectOverview(): React.JSX.Element {
               <PersonCard key={person.id} person={person} relationship={relationship} />
             ))}
           </div>
+        </>
+      )}
+
+      {notedRelationships.length > 0 && (
+        <>
+          <h3 className={styles.subHeading}>Relationship Notes</h3>
+          <ul className={styles.relNotesList}>
+            {notedRelationships.map((rel) => (
+              <li key={rel.id} className={styles.relNoteItem}>
+                <div className={styles.relNoteHeader}>{rel.description}</div>
+                <ul className={styles.relNoteBullets}>
+                  {rel.notes.map((note, idx) => (
+                    <li key={idx}>{note}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
         </>
       )}
     </div>

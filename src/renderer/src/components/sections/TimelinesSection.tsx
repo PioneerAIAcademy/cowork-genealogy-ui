@@ -50,9 +50,7 @@ export default function TimelinesSection(): React.JSX.Element {
                     <CrossLink id={tl.hypothesis_id} />
                   </>
                 )}
-                {personNames && (
-                  <span className={styles.footerPersons}>{personNames}</span>
-                )}
+                {personNames && <span className={styles.footerPersons}>{personNames}</span>}
               </div>
             }
           >
@@ -60,13 +58,12 @@ export default function TimelinesSection(): React.JSX.Element {
               <div className={styles.timeline}>
                 {tl.events.map((event, idx) => {
                   // Check if there's a gap before this event
-                  const gapBefore = idx > 0
-                    ? tl.gaps.find(
-                        (g) =>
-                          g.start === tl.events[idx - 1].date &&
-                          g.end === event.date
-                      )
-                    : null
+                  const gapBefore =
+                    idx > 0
+                      ? tl.gaps.find(
+                          (g) => g.start === tl.events[idx - 1].date && g.end === event.date
+                        )
+                      : null
 
                   // Check if there's an impossibility involving this event
                   const impossibility = tl.impossibilities.find(
@@ -75,17 +72,15 @@ export default function TimelinesSection(): React.JSX.Element {
                       event.assertion_ids.includes(imp.event_2_assertion_id)
                   )
 
+                  const distanceKm = idx > 0 ? (event.distance_from_previous_km ?? null) : null
+
                   return (
                     <div key={idx}>
                       {gapBefore && (
-                        <div
-                          className={`${styles.gap} ${styles[`gap_${gapBefore.severity}`]}`}
-                        >
+                        <div className={`${styles.gap} ${styles[`gap_${gapBefore.severity}`]}`}>
                           <div className={styles.gapLine} />
                           <div className={styles.gapContent}>
-                            <span className={styles.gapLabel}>
-                              Gap ({gapBefore.severity})
-                            </span>
+                            <span className={styles.gapLabel}>Gap ({gapBefore.severity})</span>
                             {gapBefore.expected_events.length > 0 && (
                               <span className={styles.gapExpected}>
                                 Expected: {gapBefore.expected_events.join(', ')}
@@ -95,21 +90,26 @@ export default function TimelinesSection(): React.JSX.Element {
                         </div>
                       )}
 
+                      {distanceKm !== null && (
+                        <div className={styles.distance}>
+                          <div className={styles.distanceLine} />
+                          <div className={styles.distanceLabel}>
+                            {Math.round(distanceKm).toLocaleString()} km
+                          </div>
+                        </div>
+                      )}
+
                       <div className={styles.event}>
                         <div className={styles.eventLeft}>
                           <div className={styles.eventDate}>{event.date}</div>
                           {event.date_certainty !== 'exact' && (
-                            <div className={styles.eventCertainty}>
-                              {event.date_certainty}
-                            </div>
+                            <div className={styles.eventCertainty}>{event.date_certainty}</div>
                           )}
                         </div>
                         <div className={styles.eventDot} />
                         <div className={styles.eventRight}>
                           <div className={styles.eventType}>{event.event_type}</div>
-                          {event.place && (
-                            <div className={styles.eventPlace}>{event.place}</div>
-                          )}
+                          {event.place && <div className={styles.eventPlace}>{event.place}</div>}
                           {event.description && (
                             <div className={styles.eventDesc}>{event.description}</div>
                           )}

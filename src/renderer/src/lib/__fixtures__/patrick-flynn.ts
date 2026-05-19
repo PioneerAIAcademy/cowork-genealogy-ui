@@ -13,6 +13,12 @@ export const patrickFlynnResearch: ResearchData = {
     created: '2026-05-01',
     updated: '2026-05-04'
   },
+  researcher_profile: {
+    experience_level: 'intermediate',
+    subscriptions: ['Ancestry', 'Newspapers.com'],
+    narration_guidance:
+      'Researcher has several years of experience with U.S. census and vital records but limited exposure to Irish parish registers. Explain Irish-record reasoning step by step; assume familiarity with standard U.S. record types.'
+  },
   questions: [
     {
       id: 'q_001',
@@ -37,7 +43,7 @@ export const patrickFlynnResearch: ResearchData = {
       id: 'q_002',
       question: 'Where was Patrick Flynn in the 1850 census?',
       rationale:
-        "The 1850 census is the earliest enumeration where Patrick would appear by name (age ~5). Locating him in a household identifies candidate parents.",
+        'The 1850 census is the earliest enumeration where Patrick would appear by name (age ~5). Locating him in a household identifies candidate parents.',
       selection_basis: 'objective_decomposition',
       priority: 'high',
       status: 'resolved',
@@ -57,13 +63,12 @@ export const patrickFlynnResearch: ResearchData = {
           repository_breadth:
             'Three major repositories searched (FamilySearch, Ancestry, MyHeritage). No additional known indexes of the 1850 Schuylkill County census exist.',
           original_substitution:
-            "FamilySearch provides the original census image; Ancestry index is derivative but confirmed consistent.",
+            'FamilySearch provides the original census image; Ancestry index is derivative but confirmed consistent.',
           independent_verification:
             'FamilySearch (original) and Ancestry (derivative) both return the same household. Two access paths, one underlying original.',
           evidence_class:
             'Yes — FamilySearch provides original census image with indeterminate-quality information.',
-          conflict_resolution:
-            'No conflicts on the 1850 census placement question.',
+          conflict_resolution: 'No conflicts on the 1850 census placement question.',
           overturn_risk:
             'Low — all three repositories agree, and no competing Patrick Flynn of matching age exists in the county.'
         }
@@ -95,8 +100,7 @@ export const patrickFlynnResearch: ResearchData = {
           jurisdiction: 'Schuylkill County, Pennsylvania',
           date_range: '1850',
           repository: 'Ancestry',
-          rationale:
-            'Ancestry has independent indexing; cross-check for transcription errors.',
+          rationale: 'Ancestry has independent indexing; cross-check for transcription errors.',
           fallback_for: null,
           status: 'completed'
         }
@@ -267,7 +271,8 @@ export const patrickFlynnResearch: ResearchData = {
       access_date: '2026-05-03',
       url: 'https://www.familysearch.org/ark:/61903/1:1:MDEF',
       url_archived: null,
-      notes: 'Informant is son-in-law James Brown. Primary for death facts, secondary for birth facts.'
+      notes:
+        'Informant is son-in-law James Brown. Primary for death facts, secondary for birth facts.'
     }
   ],
   assertions: [
@@ -407,7 +412,8 @@ export const patrickFlynnResearch: ResearchData = {
       assertion_id: 'a_004',
       person_id: 'I1',
       confidence: 'probable',
-      rationale: 'Household position and shared surname with head suggest parent-child relationship.',
+      rationale:
+        'Household position and shared surname with head suggest parent-child relationship.',
       match_score: null,
       created: '2026-05-01',
       superseded_by: null
@@ -417,8 +423,7 @@ export const patrickFlynnResearch: ResearchData = {
       assertion_id: 'a_004',
       person_id: 'I2',
       confidence: 'probable',
-      rationale:
-        'Thomas Flynn is the other party in the implied parent-child relationship.',
+      rationale: 'Thomas Flynn is the other party in the implied parent-child relationship.',
       match_score: 0.82,
       created: '2026-05-01',
       superseded_by: null
@@ -470,6 +475,7 @@ export const patrickFlynnResearch: ResearchData = {
           date_certainty: 'estimated',
           event_type: 'birth',
           place: 'Ireland',
+          place_id: 'place_ireland',
           description: 'Born in Ireland, estimated from census ages',
           assertion_ids: ['a_002']
         },
@@ -478,16 +484,20 @@ export const patrickFlynnResearch: ResearchData = {
           date_certainty: 'exact',
           event_type: 'census',
           place: 'Schuylkill County, Pennsylvania',
+          place_id: 'place_schuylkill_co_pa',
           description: 'Enumerated age 5 in Thomas Flynn household, dwelling 84',
-          assertion_ids: ['a_004']
+          assertion_ids: ['a_004'],
+          distance_from_previous_km: 5400
         },
         {
           date: '1908-03-12',
           date_certainty: 'exact',
           event_type: 'death',
           place: 'Schuylkill County, Pennsylvania',
+          place_id: 'place_schuylkill_co_pa',
           description: 'Died, death certificate names Thomas Flynn as father',
-          assertion_ids: ['a_013']
+          assertion_ids: ['a_013'],
+          distance_from_previous_km: 0
         }
       ],
       gaps: [
@@ -521,6 +531,7 @@ export const patrickFlynnGedcomx: GedcomxData = {
   persons: [
     {
       id: 'I1',
+      ark: 'https://familysearch.org/ark:/61903/4:1:KGS8-LY1',
       gender: 'Male',
       names: [
         {
@@ -570,6 +581,19 @@ export const patrickFlynnGedcomx: GedcomxData = {
           place: 'Ireland'
         }
       ]
+    },
+    {
+      id: 'I3',
+      gender: 'Female',
+      names: [
+        {
+          id: 'N3',
+          preferred: true,
+          given: 'Bridget',
+          surname: 'Flynn',
+          type: 'MarriedName'
+        }
+      ]
     }
   ],
   relationships: [
@@ -583,6 +607,17 @@ export const patrickFlynnGedcomx: GedcomxData = {
         { ref: 'S2', page: '1860 Census, Schuylkill Co., dwelling 112', quality: 3 },
         { ref: 'S3', page: 'Death cert. no. 4521', quality: 2 }
       ]
+    },
+    {
+      id: 'R2',
+      type: 'ParentChild',
+      parent: 'I3',
+      child: 'I1',
+      subtype: 'Step',
+      notes: [
+        "Bridget appears as Thomas's wife in the 1850 census; family lore holds she raised Patrick after his birth mother died on the passage from Ireland."
+      ],
+      sources: [{ ref: 'S1', page: '1850 Census, Schuylkill Co., dwelling 84', quality: 1 }]
     }
   ],
   sources: [

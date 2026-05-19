@@ -70,10 +70,22 @@ describe('buildIndex', () => {
     // Relationships
     expect(index.get('R1')).toBeDefined()
     expect(index.get('R1')!.section).toBe('gedcomx_relationships')
+    // Indexed regardless of whether the relationship has subtype/notes
+    expect(index.get('R2')).toBeDefined()
+    expect(index.get('R2')!.section).toBe('gedcomx_relationships')
 
     // Sources
     expect(index.get('S1')).toBeDefined()
     expect(index.get('S1')!.section).toBe('gedcomx_sources')
+  })
+
+  it('does not index researcher_profile (no IDs to look up)', () => {
+    const index = buildIndex(patrickFlynnResearch, patrickFlynnGedcomx)
+    // researcher_profile is metadata on the project, not a section with referenceable items
+    expect(patrickFlynnResearch.researcher_profile).toBeDefined()
+    // Nothing in the index should map to the profile or its fields
+    expect(index.get('researcher_profile')).toBeUndefined()
+    expect(index.get('intermediate')).toBeUndefined()
   })
 
   it('returns null for missing IDs (broken foreign key)', () => {

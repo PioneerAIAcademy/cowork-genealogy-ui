@@ -1,4 +1,5 @@
-import { ResearchDataProvider, useResearchData } from './contexts/ResearchDataContext'
+import { useResearchData } from './contexts/ResearchDataContext'
+import { ResearchDataProvider } from './contexts/ResearchDataProvider'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import ProgressPipeline from './components/layout/ProgressPipeline'

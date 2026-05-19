@@ -180,6 +180,28 @@
   border-color: var(--text-tertiary);
 }
 
+/* Distance between events */
+.distance {
+  display: grid;
+  grid-template-columns: 100px 20px 1fr;
+  gap: var(--spacing-xs);
+  padding: 2px 0;
+}
+
+.distanceLine {
+  grid-column: 2;
+  position: relative;
+}
+
+.distanceLabel {
+  grid-column: 3;
+  padding-left: var(--spacing-sm);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  font-style: italic;
+}
+
 /* Impossibility alert */
 .impossibility {
   display: grid;
