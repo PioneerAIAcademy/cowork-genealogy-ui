@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import { useResearchData } from '../../contexts/ResearchDataContext'
 import StatusBadge from '../shared/StatusBadge'
 import CrossLink from '../shared/CrossLink'
-import type { LogEntry } from '../../lib/schema'
+import type { LogEntry, Source, Assertion } from '../../lib/schema'
+import { indexByLogEntry } from '../../lib/index-by-log-entry'
 import styles from './ResearchLogSection.module.css'
 
 type SortKey = 'performed' | 'tool' | 'outcome' | 'results_examined'
@@ -30,6 +31,8 @@ function compareEntries(a: LogEntry, b: LogEntry, key: SortKey, dir: SortDir): n
 export default function ResearchLogSection(): React.JSX.Element {
   const { research, devMode } = useResearchData()
   const logEntries = research?.log ?? []
+  const sources: Source[] = research?.sources ?? []
+  const assertions: Assertion[] = research?.assertions ?? []
 
   const [sortKey, setSortKey] = useState<SortKey>('performed')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -39,6 +42,9 @@ export default function ResearchLogSection(): React.JSX.Element {
     () => [...logEntries].sort((a, b) => compareEntries(a, b, sortKey, sortDir)),
     [logEntries, sortKey, sortDir]
   )
+
+  const sourcesByLogEntry = useMemo(() => indexByLogEntry(sources), [sources])
+  const assertionsByLogEntry = useMemo(() => indexByLogEntry(assertions), [assertions])
 
   const handleSort = (key: SortKey): void => {
     if (sortKey === key) {
@@ -69,15 +75,9 @@ export default function ResearchLogSection(): React.JSX.Element {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th onClick={() => handleSort('performed')}>
-              Date{renderSortIndicator('performed')}
-            </th>
-            <th onClick={() => handleSort('tool')}>
-              Tool{renderSortIndicator('tool')}
-            </th>
-            <th onClick={() => handleSort('outcome')}>
-              Outcome{renderSortIndicator('outcome')}
-            </th>
+            <th onClick={() => handleSort('performed')}>Date{renderSortIndicator('performed')}</th>
+            <th onClick={() => handleSort('tool')}>Tool{renderSortIndicator('tool')}</th>
+            <th onClick={() => handleSort('outcome')}>Outcome{renderSortIndicator('outcome')}</th>
             <th onClick={() => handleSort('results_examined')}>
               Results{renderSortIndicator('results_examined')}
             </th>
@@ -88,6 +88,8 @@ export default function ResearchLogSection(): React.JSX.Element {
         <tbody>
           {sorted.map((entry) => {
             const isExpanded = expandedId === entry.id
+            const capturedSources = sourcesByLogEntry.get(entry.id) ?? []
+            const producedAssertions = assertionsByLogEntry.get(entry.id) ?? []
             return (
               <tr key={entry.id} id={entry.id}>
                 <td colSpan={6} style={{ padding: 0 }}>
@@ -99,21 +101,23 @@ export default function ResearchLogSection(): React.JSX.Element {
                       >
                         <td>{entry.performed}</td>
                         <td>{entry.tool}</td>
-                        <td><StatusBadge value={entry.outcome} /></td>
+                        <td>
+                          <StatusBadge value={entry.outcome} />
+                        </td>
                         <td>{entry.results_examined}</td>
                         <td>
                           <div className={styles.linkList}>
-                            <span className={styles.count}>{entry.captured_source_ids.length}</span>
-                            {entry.captured_source_ids.map((id) => (
-                              <CrossLink key={id} id={id} />
+                            <span className={styles.count}>{capturedSources.length}</span>
+                            {capturedSources.map((source) => (
+                              <CrossLink key={source.id} id={source.id} />
                             ))}
                           </div>
                         </td>
                         <td>
                           <div className={styles.linkList}>
-                            <span className={styles.count}>{entry.produced_assertion_ids.length}</span>
-                            {entry.produced_assertion_ids.map((id) => (
-                              <CrossLink key={id} id={id} />
+                            <span className={styles.count}>{producedAssertions.length}</span>
+                            {producedAssertions.map((assertion) => (
+                              <CrossLink key={assertion.id} id={assertion.id} />
                             ))}
                           </div>
                         </td>
@@ -141,7 +145,9 @@ export default function ResearchLogSection(): React.JSX.Element {
                                   <div className={styles.fieldLabel}>External Site</div>
                                   <div className={styles.fieldValue}>
                                     {entry.external_site.site} &middot;{' '}
-                                    {entry.external_site.capture_received ? 'Captured' : 'Not captured'}
+                                    {entry.external_site.capture_received
+                                      ? 'Captured'
+                                      : 'Not captured'}
                                     {entry.external_site.capture_filename && (
                                       <> &middot; {entry.external_site.capture_filename}</>
                                     )}

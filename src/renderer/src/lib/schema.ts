@@ -75,7 +75,7 @@ export interface Project {
 export interface ResearcherProfile {
   experience_level?: ExperienceLevel
   subscriptions?: Subscription[]
-  narration_guidance?: string
+  narration_guidance?: string | null
 }
 
 export interface StopCriteria {
@@ -145,8 +145,8 @@ export interface LogEntry {
   query: Record<string, unknown>
   outcome: LogOutcome
   results_examined: number
-  captured_source_ids: string[]
-  produced_assertion_ids: string[]
+  results_ref?: string | null
+  results_available?: number | null
   notes: string | null
   external_site: ExternalSite | null
 }
@@ -171,6 +171,7 @@ export interface Source {
   url: string | null
   url_archived: string | null
   notes: string | null
+  log_entry_id?: string | null
 }
 
 export interface Assertion {
@@ -376,5 +377,8 @@ export function getPreferredName(person: GedcomxPerson): string {
 }
 
 export function getPrimaryFact(person: GedcomxPerson, type: string): GedcomxFact | undefined {
-  return person.facts?.find((f) => f.type === type && f.primary) ?? person.facts?.find((f) => f.type === type)
+  return (
+    person.facts?.find((f) => f.type === type && f.primary) ??
+    person.facts?.find((f) => f.type === type)
+  )
 }

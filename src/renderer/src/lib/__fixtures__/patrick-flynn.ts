@@ -164,8 +164,8 @@ export const patrickFlynnResearch: ResearchData = {
       },
       outcome: 'positive',
       results_examined: 8,
-      captured_source_ids: ['src_001'],
-      produced_assertion_ids: ['a_001', 'a_002', 'a_003', 'a_004', 'a_005'],
+      results_ref: 'results/log_001.json',
+      results_available: 8,
       notes: 'Found Patrick Flynn age 5 in household of Thomas Flynn, dwelling 84, Schuylkill Co.',
       external_site: null
     },
@@ -182,8 +182,8 @@ export const patrickFlynnResearch: ResearchData = {
       },
       outcome: 'positive',
       results_examined: 12,
-      captured_source_ids: ['src_002'],
-      produced_assertion_ids: ['a_006', 'a_007'],
+      results_ref: null,
+      results_available: null,
       notes: 'Ancestry index confirms same household.',
       external_site: {
         site: 'ancestry',
@@ -206,8 +206,8 @@ export const patrickFlynnResearch: ResearchData = {
       },
       outcome: 'positive',
       results_examined: 2,
-      captured_source_ids: ['src_004'],
-      produced_assertion_ids: ['a_011', 'a_012', 'a_013'],
+      results_ref: 'results/log_005.json',
+      results_available: 187,
       notes: 'Death certificate found. Names Thomas Flynn as father.',
       external_site: null
     }
@@ -231,7 +231,8 @@ export const patrickFlynnResearch: ResearchData = {
       access_date: '2026-05-01',
       url: 'https://www.familysearch.org/ark:/61903/1:1:MXYZ',
       url_archived: null,
-      notes: 'Image quality good. Enumerator handwriting clear.'
+      notes: 'Image quality good. Enumerator handwriting clear.',
+      log_entry_id: 'log_001'
     },
     {
       id: 'src_002',
@@ -251,7 +252,8 @@ export const patrickFlynnResearch: ResearchData = {
       access_date: '2026-05-01',
       url: null,
       url_archived: null,
-      notes: "Ancestry's index of the same original census."
+      notes: "Ancestry's index of the same original census.",
+      log_entry_id: 'log_002'
     },
     {
       id: 'src_004',
@@ -272,7 +274,8 @@ export const patrickFlynnResearch: ResearchData = {
       url: 'https://www.familysearch.org/ark:/61903/1:1:MDEF',
       url_archived: null,
       notes:
-        'Informant is son-in-law James Brown. Primary for death facts, secondary for birth facts.'
+        'Informant is son-in-law James Brown. Primary for death facts, secondary for birth facts.',
+      log_entry_id: 'log_005'
     }
   ],
   assertions: [
