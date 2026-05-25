@@ -62,13 +62,84 @@
   gap: var(--spacing-lg);
 }
 
-.checkboxGroup {
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.showListToggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  padding: 2px 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--border-radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+
+.showListToggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.chevron {
+  display: inline-block;
+  font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.fileList {
+  list-style: none;
+  margin: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  max-height: 160px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.fileItem {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: 2px 0;
+  color: var(--text-secondary);
+}
+
+.filePath {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.fileSize {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.toggles {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
 
-.checkboxLabel {
+.toggleLabel {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -78,7 +149,7 @@
   padding: var(--spacing-xs) 0;
 }
 
-.checkboxLabel input[type='checkbox'] {
+.toggleLabel input[type='checkbox'] {
   accent-color: var(--accent-gold);
   width: 15px;
   height: 15px;
@@ -89,10 +160,10 @@
   flex: 1;
 }
 
-.size {
-  font-size: 0.78rem;
+.toggleAside {
   color: var(--text-tertiary);
-  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  margin-left: 4px;
 }
 
 .disabledLabel {

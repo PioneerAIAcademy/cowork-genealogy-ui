@@ -3,11 +3,11 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import os from 'node:os'
 import icon from '../../resources/icon.png?asset'
 import { setupMenu } from './menu'
 import { startWatching, stopWatching, getCurrentState } from './watcher'
 import { readSidecar } from './sidecar'
+import { walkProject, readSessionLog, buildFeedbackZip } from './feedback'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -107,21 +107,34 @@ function setupIPC(): void {
     async (
       _e,
       payload: {
-        research?: unknown
-        gedcomx?: unknown
-        sessionLog?: unknown[]
+        includeMedia?: boolean
+        includeSessionLog?: boolean
         userComment?: string
       }
     ) => {
       const state = getCurrentState()
-      const body = JSON.stringify({
-        timestamp: new Date().toISOString(),
-        projectFolder: state.folderPath,
-        research: payload.research,
-        gedcomx: payload.gedcomx,
-        sessionLog: payload.sessionLog,
+      if (!state.folderPath) {
+        throw new Error('No project folder is open.')
+      }
+
+      const built = await buildFeedbackZip({
+        folderPath: state.folderPath,
+        includeMedia: payload.includeMedia === true,
+        includeSessionLog: payload.includeSessionLog !== false,
         userComment: payload.userComment,
         viewerVersion: app.getVersion()
+      })
+
+      const envelope = JSON.stringify({
+        timestamp: new Date().toISOString(),
+        projectFolder: state.folderPath,
+        viewerVersion: app.getVersion(),
+        filename: built.filename,
+        zipBase64: built.zipBase64,
+        fileCount: built.fileCount,
+        uncompressedBytes: built.uncompressedBytes,
+        zipBytes: built.zipBytes,
+        userComment: payload.userComment ?? null
       })
 
       // Production: Apps Script endpoint. Override with FEEDBACK_URL env var for local dev.
@@ -132,7 +145,7 @@ function setupIPC(): void {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body
+        body: envelope
       })
 
       if (!res.ok) {
@@ -140,63 +153,20 @@ function setupIPC(): void {
       }
 
       const result = await res.json().catch(() => ({}))
-      return { ok: true, ...result }
+      return { ok: true, filename: built.filename, ...result }
     }
   )
+
+  ipcMain.handle('project:list-files', async () => {
+    const state = getCurrentState()
+    if (!state.folderPath) return []
+    return walkProject(state.folderPath)
+  })
 
   ipcMain.handle('session:get-log', async () => {
     const state = getCurrentState()
     if (!state.folderPath) return { entries: [], sizeBytes: 0 }
-
-    // Claude Code stores sessions in ~/.claude/projects/<path-with-dashes>/
-    const projectHash = state.folderPath.replace(/^\//, '').replace(/\//g, '-')
-    const claudeProjectDir = path.join(os.homedir(), '.claude', 'projects', `-${projectHash}`)
-
-    try {
-      const files = await fs.readdir(claudeProjectDir)
-      const jsonlFiles = files.filter((f) => f.endsWith('.jsonl'))
-      if (jsonlFiles.length === 0) return { entries: [], sizeBytes: 0 }
-
-      // Find the most recently modified JSONL (the active session)
-      const stats = await Promise.all(
-        jsonlFiles.map(async (f) => {
-          const filePath = path.join(claudeProjectDir, f)
-          const stat = await fs.stat(filePath)
-          return { filePath, mtime: stat.mtimeMs }
-        })
-      )
-      stats.sort((a, b) => b.mtime - a.mtime)
-      const activeFile = stats[0].filePath
-
-      const raw = await fs.readFile(activeFile, 'utf8')
-      const lines = raw.split('\n').filter((l) => l.trim())
-
-      const entries: unknown[] = []
-      for (const line of lines) {
-        try {
-          const entry = JSON.parse(line)
-          // Only include user and assistant message entries
-          if (entry.type !== 'user' && entry.type !== 'assistant') continue
-          // Filter to entries matching the project folder
-          if (entry.cwd && entry.cwd !== state.folderPath) continue
-          // Strip thinking blocks from assistant messages
-          if (entry.type === 'assistant' && entry.message?.content) {
-            entry.message.content = entry.message.content.filter(
-              (block: { type?: string }) => block.type !== 'thinking'
-            )
-          }
-          entries.push(entry)
-        } catch {
-          // Skip malformed lines
-        }
-      }
-
-      const sizeBytes = new TextEncoder().encode(JSON.stringify(entries)).length
-      return { entries, sizeBytes }
-    } catch {
-      // Directory doesn't exist or can't be read
-      return { entries: [], sizeBytes: 0 }
-    }
+    return readSessionLog(state.folderPath)
   })
 
   ipcMain.handle('project:get-state', () => {
@@ -213,6 +183,15 @@ function setupIPC(): void {
     })
     if (canceled || filePaths.length === 0) return null
     const folderPath = filePaths[0]
+
+    try {
+      await fs.stat(path.join(folderPath, 'research.json'))
+    } catch {
+      throw new Error(
+        'Not a research project — research.json not found. Run the init-project skill to create a new project, or pick a folder that already has one.'
+      )
+    }
+
     stopWatching()
     startWatching(folderPath, mainWindow!)
     return folderPath

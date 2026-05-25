@@ -32,9 +32,7 @@ function isStageCompleted(name: string, data: ResearchData): boolean {
       return data.assertions.length > 0
     case 'analysis':
       return (
-        data.conflicts.length > 0 ||
-        data.hypotheses.length > 0 ||
-        data.person_evidence.length > 0
+        data.conflicts.length > 0 || data.hypotheses.length > 0 || data.person_evidence.length > 0
       )
     case 'proof_summary':
       return data.proof_summaries.length > 0

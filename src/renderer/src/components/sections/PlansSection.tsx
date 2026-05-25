@@ -7,7 +7,7 @@ import styles from './PlansSection.module.css'
 
 export default function PlansSection(): React.JSX.Element {
   const { research, getById } = useResearchData()
-  const plans = research?.plans ?? []
+  const plans = useMemo(() => research?.plans ?? [], [research?.plans])
 
   const grouped = useMemo(() => {
     const groups = new Map<string, Plan[]>()
@@ -37,9 +37,7 @@ export default function PlansSection(): React.JSX.Element {
       <h2 className={styles.sectionTitle}>Plans</h2>
       {Array.from(grouped.entries()).map(([questionId, questionPlans]) => {
         const entry = getById(questionId)
-        const questionText = entry
-          ? (entry.item as Question).question
-          : questionId
+        const questionText = entry ? (entry.item as Question).question : questionId
 
         return (
           <div key={questionId} className={styles.group}>
@@ -65,7 +63,9 @@ export default function PlansSection(): React.JSX.Element {
                           {item.jurisdiction} &middot; {item.date_range} &middot; {item.repository}
                         </span>
                         <StatusBadge value={item.status} />
-                        {item.fallback_for && <span className={styles.fallbackLabel}>(fallback)</span>}
+                        {item.fallback_for && (
+                          <span className={styles.fallbackLabel}>(fallback)</span>
+                        )}
                         {item.rationale && (
                           <div className={styles.itemRationale}>{item.rationale}</div>
                         )}

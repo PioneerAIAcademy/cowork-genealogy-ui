@@ -67,13 +67,9 @@ export default function ConflictsSection(): React.JSX.Element {
                           className={`${styles.assertionItem} ${isPreferred ? styles.preferred : ''}`}
                         >
                           <span className={styles.assertionText}>
-                            {assertion
-                              ? `${assertion.fact_type}: ${assertion.value}`
-                              : aid}
+                            {assertion ? `${assertion.fact_type}: ${assertion.value}` : aid}
                           </span>
-                          {isPreferred && (
-                            <span className={styles.preferredBadge}>Preferred</span>
-                          )}
+                          {isPreferred && <span className={styles.preferredBadge}>Preferred</span>}
                           <CrossLink id={aid} label="View" />
                         </li>
                       )

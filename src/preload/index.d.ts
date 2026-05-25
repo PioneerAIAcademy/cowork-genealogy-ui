@@ -1,3 +1,10 @@
+export interface ProjectFile {
+  relativePath: string
+  sizeBytes: number
+  isMedia: boolean
+  isText: boolean
+}
+
 export interface AppAPI {
   openFile: () => Promise<{ filePath: string; content: string; ext: string } | null>
   openExternal: (url: string) => Promise<void>
@@ -10,12 +17,12 @@ export interface AppAPI {
   getSessionLog: () => Promise<{ entries: unknown[]; sizeBytes: number }>
   selectFolder: () => Promise<string | null>
   getState: () => Promise<{ folderPath: string | null; research: unknown; gedcomx: unknown }>
+  listProjectFiles: () => Promise<ProjectFile[]>
   submitFeedback: (payload: {
-    research?: unknown
-    gedcomx?: unknown
-    sessionLog?: unknown[]
+    includeMedia: boolean
+    includeSessionLog: boolean
     userComment?: string
-  }) => Promise<{ ok: true }>
+  }) => Promise<{ ok: true; filename?: string }>
   readSidecar: (logId: string) => Promise<{ raw: string; mtime: number } | null>
 }
 

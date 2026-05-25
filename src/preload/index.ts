@@ -26,10 +26,10 @@ contextBridge.exposeInMainWorld('api', {
   getSessionLog: () => ipcRenderer.invoke('session:get-log'),
   selectFolder: () => ipcRenderer.invoke('project:select-folder'),
   getState: () => ipcRenderer.invoke('project:get-state'),
+  listProjectFiles: () => ipcRenderer.invoke('project:list-files'),
   submitFeedback: (payload: {
-    research?: unknown
-    gedcomx?: unknown
-    sessionLog?: unknown[]
+    includeMedia: boolean
+    includeSessionLog: boolean
     userComment?: string
   }) => ipcRenderer.invoke('feedback:submit', payload)
 })

@@ -101,7 +101,7 @@ function AssertionCard({ assertion }: { assertion: Assertion }): React.JSX.Eleme
 
 export default function AssertionsSection(): React.JSX.Element {
   const { research } = useResearchData()
-  const assertions = research?.assertions ?? []
+  const assertions = useMemo(() => research?.assertions ?? [], [research?.assertions])
 
   const [factTypeFilter, setFactTypeFilter] = useState('all')
   const [evidenceTypeFilter, setEvidenceTypeFilter] = useState('all')

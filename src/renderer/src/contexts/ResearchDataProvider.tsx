@@ -76,6 +76,9 @@ export function ResearchDataProvider({ children }: { children: ReactNode }): Rea
   )
 
   useEffect(() => {
+    // Capture ref value for cleanup — Map instance is stable across renders.
+    const timers = pendingFetchTimers.current
+
     // Hydrate from main process state (covers CLI --project-dir and page reloads)
     window.api.getState().then((state) => {
       if (state.folderPath) {
@@ -117,7 +120,6 @@ export function ResearchDataProvider({ children }: { children: ReactNode }): Rea
       if (current.status === 'loaded' && mtime > 0 && current.lastMtime >= mtime) return
 
       // Per-logId coalesce: reset any pending timer, fire after a quiet window.
-      const timers = pendingFetchTimers.current
       const existing = timers.get(logId)
       if (existing) clearTimeout(existing)
       const timer = setTimeout(() => {
@@ -137,7 +139,6 @@ export function ResearchDataProvider({ children }: { children: ReactNode }): Rea
     return () => {
       window.api.removeAllWatchListeners()
       // Cancel any pending sidecar refetches on unmount.
-      const timers = pendingFetchTimers.current
       for (const t of timers.values()) clearTimeout(t)
       timers.clear()
     }
@@ -160,10 +161,14 @@ export function ResearchDataProvider({ children }: { children: ReactNode }): Rea
   const clearError = useCallback(() => setError(null), [])
 
   const selectFolder = useCallback(async () => {
-    const path = await window.api.selectFolder()
-    if (path) {
-      setFolderPath(path)
-      setError(null)
+    try {
+      const path = await window.api.selectFolder()
+      if (path) {
+        setFolderPath(path)
+        setError(null)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to select folder')
     }
   }, [])
 

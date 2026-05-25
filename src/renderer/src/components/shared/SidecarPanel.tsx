@@ -89,14 +89,15 @@ export default function SidecarPanel(): React.JSX.Element | null {
   // for an assertion-triggered openSidecar. role="dialog" + aria-modal +
   // focus trap give us the a11y semantics; we intentionally skip aria-hidden
   // on the root because the drawer renders inside it.
+  const focusPersonaId = sidecar.status === 'loaded' ? sidecar.focusPersonaId : undefined
   useEffect(() => {
     if (sidecar.status !== 'loaded') return
-    if (sidecar.focusPersonaId === undefined) return
+    if (focusPersonaId === undefined) return
     requestAnimationFrame(() => {
       const node = bodyRef.current?.querySelector('[data-focused="true"]')
       if (node) (node as HTMLElement).scrollIntoView({ block: 'center', behavior: 'smooth' })
     })
-  }, [sidecar.status, sidecar.status === 'loaded' ? sidecar.focusPersonaId : null])
+  }, [sidecar.status, focusPersonaId])
 
   if (sidecar.status === 'closed') return null
 

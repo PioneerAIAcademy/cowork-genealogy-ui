@@ -17,8 +17,15 @@ function getInitialTheme(): string {
 }
 
 export default function Sidebar(): React.JSX.Element {
-  const { research, folderPath, activeSection, setActiveSection, devMode, setDevMode, lastUpdated } =
-    useResearchData()
+  const {
+    research,
+    folderPath,
+    activeSection,
+    setActiveSection,
+    devMode,
+    setDevMode,
+    lastUpdated
+  } = useResearchData()
   const [theme, setTheme] = useState(getInitialTheme)
 
   const toggleTheme = useCallback(() => {
@@ -29,7 +36,11 @@ export default function Sidebar(): React.JSX.Element {
   }, [theme])
 
   const sections: SectionItem[] = [
-    { key: 'project_overview', label: 'Project Overview', countFn: () => (research?.project ? 1 : 0) },
+    {
+      key: 'project_overview',
+      label: 'Project Overview',
+      countFn: () => (research?.project ? 1 : 0)
+    },
     { key: 'questions', label: 'Questions', countFn: () => research?.questions.length ?? 0 },
     { key: 'plans', label: 'Plans', countFn: () => research?.plans.length ?? 0 },
     { key: 'log', label: 'Research Log', countFn: () => research?.log.length ?? 0 },
@@ -70,9 +81,7 @@ export default function Sidebar(): React.JSX.Element {
       </div>
       <div className={styles.footer}>
         {lastUpdated && (
-          <span className={styles.timestamp}>
-            Updated {lastUpdated.toLocaleTimeString()}
-          </span>
+          <span className={styles.timestamp}>Updated {lastUpdated.toLocaleTimeString()}</span>
         )}
         <div className={styles.footerControls}>
           <button

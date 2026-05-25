@@ -7,18 +7,15 @@ export default function Header(): React.JSX.Element {
 
   return (
     <>
-    <header className={styles.header}>
-      <div className={styles.title}>Research Viewer</div>
-      <div className={styles.controls}>
-        <button
-          className={styles.feedbackBtn}
-          onClick={() => setShowFeedback(true)}
-        >
-          Send Feedback
-        </button>
-      </div>
-    </header>
-    {showFeedback && <FeedbackDialog onClose={() => setShowFeedback(false)} />}
+      <header className={styles.header}>
+        <div className={styles.title}>Research Viewer</div>
+        <div className={styles.controls}>
+          <button className={styles.feedbackBtn} onClick={() => setShowFeedback(true)}>
+            Send Feedback
+          </button>
+        </div>
+      </header>
+      {showFeedback && <FeedbackDialog onClose={() => setShowFeedback(false)} />}
     </>
   )
 }

@@ -39,9 +39,9 @@ function viewResultsLabel(entry: LogEntry): string {
 
 export default function ResearchLogSection(): React.JSX.Element {
   const { research, devMode, openSidecar } = useResearchData()
-  const logEntries = research?.log ?? []
-  const sources: Source[] = research?.sources ?? []
-  const assertions: Assertion[] = research?.assertions ?? []
+  const logEntries = useMemo(() => research?.log ?? [], [research?.log])
+  const sources = useMemo<Source[]>(() => research?.sources ?? [], [research?.sources])
+  const assertions = useMemo<Assertion[]>(() => research?.assertions ?? [], [research?.assertions])
 
   const [sortKey, setSortKey] = useState<SortKey>('performed')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
