@@ -8,17 +8,33 @@ let currentFolderPath: string | null = null
 let lastResearch: unknown = null
 let lastGedcomx: unknown = null
 
-const WATCHED_FILES = ['research.json', 'tree.gedcomx.json'] as const
-type FixedFile = (typeof WATCHED_FILES)[number]
+export const WATCHED_FILES = ['research.json', 'tree.gedcomx.json'] as const
+export type FixedFile = (typeof WATCHED_FILES)[number]
 
-const channelMap: Record<FixedFile, string> = {
+export const channelMap: Record<FixedFile, string> = {
   'research.json': 'project:research-updated',
   'tree.gedcomx.json': 'project:gedcomx-updated'
 }
 
 // log_<alphanumeric>.json — anything else under results/ is ignored (READMEs,
 // .DS_Store, .tmp during atomic writes, etc.).
-const SIDECAR_BASENAME = /^(log_[a-zA-Z0-9_-]+)\.json$/
+export const SIDECAR_BASENAME = /^(log_[a-zA-Z0-9_-]+)\.json$/
+
+// Pure classifier — pulled out so the basename routing is testable without
+// spinning up chokidar or Electron. Used inside the watch handler below.
+export type Classification =
+  | { kind: 'fixed'; file: FixedFile }
+  | { kind: 'sidecar'; logId: string }
+  | { kind: 'ignore' }
+
+export function classifyBasename(base: string): Classification {
+  if ((WATCHED_FILES as readonly string[]).includes(base)) {
+    return { kind: 'fixed', file: base as FixedFile }
+  }
+  const m = base.match(SIDECAR_BASENAME)
+  if (m) return { kind: 'sidecar', logId: m[1] }
+  return { kind: 'ignore' }
+}
 
 export function getCurrentState(): {
   folderPath: string | null
@@ -44,49 +60,49 @@ export function startWatching(folderPath: string, mainWindow: BrowserWindow): vo
   watcher.add(sidecarDir)
 
   const handleChange = async (filePath: string): Promise<void> => {
-    const base = basename(filePath)
+    const cls = classifyBasename(basename(filePath))
 
-    // Fixed-file branch (existing behavior — research.json / tree.gedcomx.json)
-    if ((WATCHED_FILES as readonly string[]).includes(base)) {
+    if (cls.kind === 'fixed') {
       try {
         const content = await readFile(filePath, 'utf8')
         const data = JSON.parse(content)
-        if (base === 'research.json') lastResearch = data
-        if (base === 'tree.gedcomx.json') lastGedcomx = data
-        mainWindow.webContents.send(channelMap[base as FixedFile], data)
+        if (cls.file === 'research.json') lastResearch = data
+        if (cls.file === 'tree.gedcomx.json') lastGedcomx = data
+        mainWindow.webContents.send(channelMap[cls.file], data)
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
-        mainWindow.webContents.send('project:watch-error', `Error reading ${base}: ${message}`)
+        mainWindow.webContents.send('project:watch-error', `Error reading ${cls.file}: ${message}`)
       }
       return
     }
 
-    // Sidecar branch — pointer-only event so the watcher stays cheap even
-    // when the renderer doesn't have a drawer open for this logId.
-    const m = base.match(SIDECAR_BASENAME)
-    if (!m) return
-    const logId = m[1]
-    const st = await fsStat(filePath).catch(() => null)
-    if (!st) return
-    mainWindow.webContents.send('project:sidecar-updated', {
-      logId,
-      mtime: st.mtimeMs
-    })
+    if (cls.kind === 'sidecar') {
+      // Pointer-only event so the watcher stays cheap even when the renderer
+      // doesn't have a drawer open for this logId.
+      const st = await fsStat(filePath).catch(() => null)
+      if (!st) return
+      mainWindow.webContents.send('project:sidecar-updated', {
+        logId: cls.logId,
+        mtime: st.mtimeMs
+      })
+      return
+    }
+
+    // cls.kind === 'ignore' — README.md, .DS_Store, log_001.json.tmp, etc.
   }
 
   watcher.on('add', handleChange)
   watcher.on('change', handleChange)
 
   watcher.on('unlink', (filePath) => {
-    const base = basename(filePath)
-    if ((WATCHED_FILES as readonly string[]).includes(base)) {
-      mainWindow.webContents.send('project:watch-error', `${base} deleted`)
+    const cls = classifyBasename(basename(filePath))
+    if (cls.kind === 'fixed') {
+      mainWindow.webContents.send('project:watch-error', `${cls.file} deleted`)
       return
     }
-    const m = base.match(SIDECAR_BASENAME)
-    if (m) {
+    if (cls.kind === 'sidecar') {
       // mtime: 0 sentinel = the sidecar was removed
-      mainWindow.webContents.send('project:sidecar-updated', { logId: m[1], mtime: 0 })
+      mainWindow.webContents.send('project:sidecar-updated', { logId: cls.logId, mtime: 0 })
     }
   })
 
