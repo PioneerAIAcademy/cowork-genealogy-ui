@@ -20,7 +20,7 @@
 
 .relationship {
   font-size: 0.78rem;
-  color: var(--accent-gold);
+  color: var(--accent-gold-strong);
   margin-top: 2px;
   font-weight: 500;
   text-transform: uppercase;
@@ -48,7 +48,7 @@
 }
 
 .ark {
-  color: var(--text-link);
+  color: var(--accent-gold-strong);
   text-decoration: none;
 }
 

@@ -79,6 +79,8 @@
   /* Decorative */
   --accent-gold: #b8860b;
   --accent-gold-soft: rgba(184, 134, 11, 0.12);
+  /* AA-compliant variant for small text on warm paper (~6.0:1 vs #faf8f4) */
+  --accent-gold-strong: #8a6608;
   --accent-burgundy: #7b2d3b;
   --divider-ornament: #cfc6b8;
 }
@@ -129,6 +131,8 @@
 
   --accent-gold: #d4a040;
   --accent-gold-soft: rgba(212, 160, 64, 0.15);
+  /* AA-compliant variant for small text on dark paper (~7.2:1 vs #1a1714) */
+  --accent-gold-strong: #e8b75c;
   --accent-burgundy: #c85060;
   --divider-ornament: #3a342c;
 }

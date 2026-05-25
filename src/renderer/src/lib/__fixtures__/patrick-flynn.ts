@@ -493,7 +493,9 @@ export const patrickFlynnResearch: ResearchData = {
           place_id: 'place_schuylkill_co_pa',
           description: 'Enumerated age 5 in Thomas Flynn household, dwelling 84',
           assertion_ids: ['a_004'],
-          distance_from_previous_km: 5400
+          distance_from_previous_km: 5400,
+          conflict_ids: ['c_001'],
+          conflict_note: 'Death certificate gives a different father; see c_001.'
         },
         {
           date: '1908-03-12',
@@ -508,10 +510,12 @@ export const patrickFlynnResearch: ResearchData = {
       ],
       gaps: [
         {
-          start: '1860-01-01',
+          start: '1850',
           end: '1908-03-12',
           expected_events: ['marriage', '1870_census', '1880_census', '1900_census'],
-          severity: 'high'
+          severity: 'high',
+          notes:
+            'Probate, naturalization, and city directories should fill some of this 58-year window.'
         }
       ],
       impossibilities: []

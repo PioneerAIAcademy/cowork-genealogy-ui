@@ -243,6 +243,8 @@ export interface TimelineEvent {
   description: string
   assertion_ids: string[]
   distance_from_previous_km?: number | null
+  conflict_ids?: string[] | null
+  conflict_note?: string | null
 }
 
 export interface TimelineGap {
@@ -250,6 +252,7 @@ export interface TimelineGap {
   end: string
   expected_events: string[]
   severity: 'high' | 'medium' | 'low'
+  notes?: string | null
 }
 
 export interface TimelineImpossibility {

@@ -244,3 +244,37 @@
   font-size: 12px;
   color: var(--text-secondary);
 }
+
+/* B6: gap.notes — italic supplementary text under the gap badge */
+.gapNotes {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin-top: var(--spacing-xs);
+}
+
+/* B5: conflict chip — warm-sandstone background per --conflict-unresolved-* */
+.conflictChip {
+  background: var(--conflict-unresolved-bg);
+  border: 1px solid var(--conflict-unresolved-border);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+  font-size: 12px;
+}
+
+.conflictLabel {
+  font-weight: 600;
+}
+
+.conflictNote {
+  color: var(--text-secondary);
+}
+
+.conflictLinks {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  flex-wrap: wrap;
+}

@@ -86,6 +86,9 @@ export default function TimelinesSection(): React.JSX.Element {
                                 Expected: {gapBefore.expected_events.join(', ')}
                               </span>
                             )}
+                            {gapBefore.notes && (
+                              <span className={styles.gapNotes}>{gapBefore.notes}</span>
+                            )}
                           </div>
                         </div>
                       )}
@@ -118,6 +121,24 @@ export default function TimelinesSection(): React.JSX.Element {
                               {event.assertion_ids.map((aid) => (
                                 <CrossLink key={aid} id={aid} />
                               ))}
+                            </div>
+                          )}
+                          {event.conflict_ids && event.conflict_ids.length > 0 && (
+                            <div className={styles.conflictChip}>
+                              <span className={styles.conflictLabel}>
+                                Conflict ({event.conflict_ids.length})
+                              </span>
+                              {event.conflict_note && (
+                                <span className={styles.conflictNote}>
+                                  {' — '}
+                                  {event.conflict_note}
+                                </span>
+                              )}
+                              <div className={styles.conflictLinks}>
+                                {event.conflict_ids.map((cid) => (
+                                  <CrossLink key={cid} id={cid} />
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
