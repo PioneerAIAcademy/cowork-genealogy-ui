@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useResearchData } from '../../contexts/ResearchDataContext'
 import Card from '../shared/Card'
 import StatusBadge from '../shared/StatusBadge'
@@ -5,9 +6,31 @@ import CrossLink from '../shared/CrossLink'
 import type { Source } from '../../lib/schema'
 import styles from './SourcesSection.module.css'
 
+const TRANSCRIPTION_PREVIEW_CHARS = 300
+
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text
   return text.slice(0, max) + '...'
+}
+
+function Transcription({ text }: { text: string }): React.JSX.Element {
+  const [expanded, setExpanded] = useState(false)
+  const isLong = text.length > TRANSCRIPTION_PREVIEW_CHARS
+  const displayed = expanded || !isLong ? text : text.slice(0, TRANSCRIPTION_PREVIEW_CHARS) + '…'
+  return (
+    <>
+      <pre className={styles.transcriptionBlock}>{displayed}</pre>
+      {isLong && (
+        <button
+          type="button"
+          className={styles.transcriptionToggle}
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </>
+  )
 }
 
 function SourceCard({ source }: { source: Source }): React.JSX.Element {
@@ -24,10 +47,15 @@ function SourceCard({ source }: { source: Source }): React.JSX.Element {
       badges={<StatusBadge value={source.source_classification} />}
       summary={truncate(source.citation, 200)}
       footer={
-        <CrossLink
-          id={source.gedcomx_source_description_id}
-          label={`GedcomX: ${source.gedcomx_source_description_id}`}
-        />
+        <div className={styles.footerLinks}>
+          <CrossLink
+            id={source.gedcomx_source_description_id}
+            label={`GedcomX: ${source.gedcomx_source_description_id}`}
+          />
+          {source.log_entry_id && (
+            <CrossLink id={source.log_entry_id} label={`Captured by: ${source.log_entry_id}`} />
+          )}
+        </div>
       }
       rawData={source}
     >
@@ -71,10 +99,7 @@ function SourceCard({ source }: { source: Source }): React.JSX.Element {
       {source.url && (
         <div className={styles.field}>
           <div className={styles.fieldLabel}>URL</div>
-          <button
-            className={styles.externalLink}
-            onClick={() => handleLinkClick(source.url!)}
-          >
+          <button className={styles.externalLink} onClick={() => handleLinkClick(source.url!)}>
             {source.url}
           </button>
         </div>
@@ -84,6 +109,13 @@ function SourceCard({ source }: { source: Source }): React.JSX.Element {
         <div className={styles.field}>
           <div className={styles.fieldLabel}>Notes</div>
           <div className={styles.notes}>{source.notes}</div>
+        </div>
+      )}
+
+      {source.transcription && (
+        <div className={styles.field}>
+          <div className={styles.fieldLabel}>Transcription</div>
+          <Transcription text={source.transcription} />
         </div>
       )}
     </Card>

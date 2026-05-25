@@ -172,6 +172,7 @@ export interface Source {
   url_archived: string | null
   notes: string | null
   log_entry_id?: string | null
+  transcription?: string | null
 }
 
 export interface Assertion {
@@ -191,6 +192,7 @@ export interface Assertion {
   informant_bias_notes: string | null
   evidence_type: EvidenceType
   log_entry_id: string | null
+  record_persona_id?: string | null
   extracted_for_question_ids: string[]
 }
 

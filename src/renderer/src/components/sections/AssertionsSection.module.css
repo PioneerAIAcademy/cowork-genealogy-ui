@@ -89,6 +89,15 @@
   flex-wrap: wrap;
 }
 
+.personaId {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg-code);
+  padding: 1px 6px;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+}
+
 .empty {
   font-size: 13px;
   color: var(--text-tertiary);

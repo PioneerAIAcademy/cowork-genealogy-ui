@@ -232,7 +232,9 @@ export const patrickFlynnResearch: ResearchData = {
       url: 'https://www.familysearch.org/ark:/61903/1:1:MXYZ',
       url_archived: null,
       notes: 'Image quality good. Enumerator handwriting clear.',
-      log_entry_id: 'log_001'
+      log_entry_id: 'log_001',
+      transcription:
+        'Schuylkill County, Pennsylvania, dwelling 84, family 91:\n  Thomas Flynn        45  M  Laborer    Ireland\n  Bridget Flynn       40  F             Ireland\n  Margaret Flynn      12  F             Pennsylvania\n  Patrick Flynn        5  M             Pennsylvania\n  Mary Flynn           3  F             Pennsylvania\n\nEnumerator: J. Welsh, 12 Aug 1850.'
     },
     {
       id: 'src_002',
@@ -296,6 +298,7 @@ export const patrickFlynnResearch: ResearchData = {
       informant_bias_notes: null,
       evidence_type: 'direct',
       log_entry_id: 'log_001',
+      record_persona_id: 'P1',
       extracted_for_question_ids: ['q_002']
     },
     {

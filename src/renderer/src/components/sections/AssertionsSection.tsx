@@ -52,6 +52,15 @@ function AssertionCard({ assertion }: { assertion: Assertion }): React.JSX.Eleme
         </div>
       </div>
 
+      {assertion.record_persona_id && (
+        <div className={styles.field}>
+          <div className={styles.fieldLabel}>Persona</div>
+          <div className={styles.fieldValue}>
+            <code className={styles.personaId}>{assertion.record_persona_id}</code>
+          </div>
+        </div>
+      )}
+
       {assertion.structured_value && Object.keys(assertion.structured_value).length > 0 && (
         <div className={styles.field}>
           <div className={styles.fieldLabel}>Structured Value</div>
@@ -118,7 +127,9 @@ export default function AssertionsSection(): React.JSX.Element {
             >
               <option value="all">All</option>
               {factTypes.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -131,7 +142,9 @@ export default function AssertionsSection(): React.JSX.Element {
             >
               <option value="all">All</option>
               {evidenceTypes.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -146,7 +159,9 @@ export default function AssertionsSection(): React.JSX.Element {
 
       {filtered.length === 0 ? (
         <p className={styles.empty}>
-          {assertions.length === 0 ? 'No assertions yet.' : 'No assertions match the current filters.'}
+          {assertions.length === 0
+            ? 'No assertions yet.'
+            : 'No assertions match the current filters.'}
         </p>
       ) : (
         filtered.map((a) => <AssertionCard key={a.id} assertion={a} />)
