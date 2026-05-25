@@ -371,6 +371,59 @@ export interface GedcomxData {
 }
 
 // ============================================================
+// Sidecar payloads (results/log_NNN.json) — per research-schema-spec §5.4.1
+// ============================================================
+
+export interface TreeMatch {
+  personId: string
+  personName: string
+  treeId?: string
+  ark?: string
+}
+
+export interface RecordSearchResult {
+  primaryId: string
+  personId?: string
+  personName?: string
+  score?: number
+  arkUrl?: string
+  collectionTitle?: string
+  recordTitle?: string
+  birthDate?: string
+  birthPlace?: string
+  events?: Array<{ type?: string; date?: string; place?: string }>
+  gedcomx?: {
+    persons: GedcomxPerson[]
+    relationships: GedcomxRelationship[]
+  }
+  treeMatches?: TreeMatch[]
+}
+
+export interface FulltextSearchResult {
+  id: string
+  collectionTitle?: string
+  recordType?: string
+  recordPlace?: string
+  textDocument?: string
+  names?: string[]
+  places?: string[]
+  highlightTerms?: string[]
+}
+
+export type SidecarTool = 'record_search' | 'fulltext_search' | string
+
+export interface SidecarFile {
+  log_id: string
+  tool: SidecarTool
+  retrieved: string
+  returned_count: number
+  payload: {
+    results?: Array<RecordSearchResult | FulltextSearchResult>
+    [key: string]: unknown
+  }
+}
+
+// ============================================================
 // Helpers
 // ============================================================
 

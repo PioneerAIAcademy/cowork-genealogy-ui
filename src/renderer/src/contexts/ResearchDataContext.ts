@@ -1,10 +1,25 @@
 import { createContext, useContext } from 'react'
-import type { ResearchData, GedcomxData } from '../lib/schema'
+import type { ResearchData, GedcomxData, SidecarFile } from '../lib/schema'
 
 export interface IndexEntry {
   item: unknown
   section: string
 }
+
+// Discriminated union — one source of truth for the sidecar drawer's
+// status. SidecarPanel renders via exhaustive switch; no ambiguous nulls.
+export type SidecarState =
+  | { status: 'closed' }
+  | { status: 'loading'; logId: string; focusPersonaId?: string }
+  | {
+      status: 'loaded'
+      logId: string
+      focusPersonaId?: string
+      payload: SidecarFile
+      lastMtime: number
+    }
+  | { status: 'missing'; logId: string }
+  | { status: 'error'; logId: string; error: string }
 
 export interface ResearchDataState {
   research: ResearchData | null
@@ -19,6 +34,10 @@ export interface ResearchDataState {
   selectFolder: () => Promise<void>
   activeSection: string
   setActiveSection: (section: string) => void
+  sidecar: SidecarState
+  openSidecar: (logId: string, focusPersonaId?: string) => void
+  closeSidecar: () => void
+  clearFocusPersona: () => void
 }
 
 export const ResearchDataContext = createContext<ResearchDataState | null>(null)

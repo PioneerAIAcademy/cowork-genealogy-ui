@@ -16,22 +16,15 @@ vi.mock('../../../contexts/ResearchDataContext', async () => {
 })
 
 import { useResearchData } from '../../../contexts/ResearchDataContext'
+import { buildMockContext } from '../../../contexts/__tests__/mockContext'
 
 function mockResearch(overrides: Partial<ResearchData> = {}): void {
-  vi.mocked(useResearchData).mockReturnValue({
-    research: { ...patrickFlynnResearch, ...overrides },
-    gedcomx: null,
-    error: null,
-    clearError: () => {},
-    lastUpdated: null,
-    folderPath: null,
-    devMode: false,
-    setDevMode: () => {},
-    getById: () => null,
-    selectFolder: async () => {},
-    activeSection: 'sources',
-    setActiveSection: () => {}
-  })
+  vi.mocked(useResearchData).mockReturnValue(
+    buildMockContext({
+      research: { ...patrickFlynnResearch, ...overrides },
+      activeSection: 'sources'
+    })
+  )
 }
 
 function makeSource(overrides: Partial<Source> = {}): Source {

@@ -116,3 +116,24 @@
   color: var(--text-tertiary);
   font-style: italic;
 }
+
+.viewResultsButton {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--accent-gold-strong);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.viewResultsButton:hover {
+  background: var(--bg-hover);
+}
+
+.viewResultsButton:focus-visible {
+  outline: 2px solid var(--accent-gold-strong);
+  outline-offset: 1px;
+}

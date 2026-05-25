@@ -5,6 +5,7 @@ export interface AppAPI {
   onResearchUpdated: (callback: (data: unknown) => void) => void
   onGedcomxUpdated: (callback: (data: unknown) => void) => void
   onWatchError: (callback: (error: string) => void) => void
+  onSidecarUpdated: (callback: (event: { logId: string; mtime: number }) => void) => void
   removeAllWatchListeners: () => void
   getSessionLog: () => Promise<{ entries: unknown[]; sizeBytes: number }>
   selectFolder: () => Promise<string | null>
@@ -15,6 +16,7 @@ export interface AppAPI {
     sessionLog?: unknown[]
     userComment?: string
   }) => Promise<{ ok: true }>
+  readSidecar: (logId: string) => Promise<{ raw: string; mtime: number } | null>
 }
 
 declare global {

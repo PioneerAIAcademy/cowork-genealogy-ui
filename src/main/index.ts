@@ -202,6 +202,25 @@ function setupIPC(): void {
     return getCurrentState()
   })
 
+  ipcMain.handle('project:read-sidecar', async (_e, logId: string) => {
+    const state = getCurrentState()
+    if (!state.folderPath) return null
+    if (typeof logId !== 'string' || !/^log_[a-zA-Z0-9_-]+$/.test(logId)) {
+      throw new Error('Invalid log id')
+    }
+    if (logId.includes('\0')) throw new Error('Invalid log id')
+    const filePath = path.join(state.folderPath, 'results', `${logId}.json`)
+    const stat = await fs.stat(filePath).catch(() => null)
+    if (!stat) return null
+    const SIDECAR_MAX_BYTES = 10 * 1024 * 1024
+    if (stat.size > SIDECAR_MAX_BYTES) {
+      throw new Error(`Sidecar exceeds ${SIDECAR_MAX_BYTES / 1024 / 1024}MB cap`)
+    }
+    // Return raw string + mtime; renderer parses to keep main process responsive
+    const raw = await fs.readFile(filePath, 'utf8')
+    return { raw, mtime: stat.mtimeMs }
+  })
+
   ipcMain.handle('project:select-folder', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openDirectory']

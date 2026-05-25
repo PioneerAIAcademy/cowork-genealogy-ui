@@ -28,8 +28,17 @@ function compareEntries(a: LogEntry, b: LogEntry, key: SortKey, dir: SortDir): n
   return dir === 'desc' ? -cmp : cmp
 }
 
+function viewResultsLabel(entry: LogEntry): string {
+  const examined = entry.results_examined
+  const available = entry.results_available
+  if (available !== undefined && available !== null && available > examined) {
+    return `View ${examined} of ${available} results →`
+  }
+  return `View ${examined} results →`
+}
+
 export default function ResearchLogSection(): React.JSX.Element {
-  const { research, devMode } = useResearchData()
+  const { research, devMode, openSidecar } = useResearchData()
   const logEntries = research?.log ?? []
   const sources: Source[] = research?.sources ?? []
   const assertions: Assertion[] = research?.assertions ?? []
@@ -137,6 +146,22 @@ export default function ResearchLogSection(): React.JSX.Element {
                                 <div className={styles.field}>
                                   <div className={styles.fieldLabel}>Notes</div>
                                   <div className={styles.fieldValue}>{entry.notes}</div>
+                                </div>
+                              )}
+
+                              {entry.results_ref && (
+                                <div className={styles.field}>
+                                  <div className={styles.fieldLabel}>Results</div>
+                                  <button
+                                    type="button"
+                                    className={styles.viewResultsButton}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      openSidecar(entry.id)
+                                    }}
+                                  >
+                                    {viewResultsLabel(entry)}
+                                  </button>
                                 </div>
                               )}
 

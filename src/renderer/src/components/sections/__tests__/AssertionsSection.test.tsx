@@ -18,22 +18,15 @@ vi.mock('../../../contexts/ResearchDataContext', async () => {
 })
 
 import { useResearchData } from '../../../contexts/ResearchDataContext'
+import { buildMockContext } from '../../../contexts/__tests__/mockContext'
 
 function mockResearch(overrides: Partial<ResearchData> = {}): void {
-  vi.mocked(useResearchData).mockReturnValue({
-    research: { ...patrickFlynnResearch, ...overrides },
-    gedcomx: null,
-    error: null,
-    clearError: () => {},
-    lastUpdated: null,
-    folderPath: null,
-    devMode: false,
-    setDevMode: () => {},
-    getById: () => null,
-    selectFolder: async () => {},
-    activeSection: 'assertions',
-    setActiveSection: () => {}
-  })
+  vi.mocked(useResearchData).mockReturnValue(
+    buildMockContext({
+      research: { ...patrickFlynnResearch, ...overrides },
+      activeSection: 'assertions'
+    })
+  )
 }
 
 // Helper: cards collapse by default. Find the card with the given title

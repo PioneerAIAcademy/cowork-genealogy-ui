@@ -18,7 +18,15 @@ if (typeof window !== 'undefined' && !('api' in window)) {
       submitFeedback: () => Promise.resolve({ ok: true }),
       getSessionLog: () => Promise.resolve({ entries: [], sizeBytes: 0 }),
       getProjectState: () => Promise.resolve({ folderPath: null, research: null, gedcomx: null }),
-      selectProjectFolder: () => Promise.resolve(null)
+      getState: () => Promise.resolve({ folderPath: null, research: null, gedcomx: null }),
+      selectFolder: () => Promise.resolve(null),
+      selectProjectFolder: () => Promise.resolve(null),
+      onResearchUpdated: () => {},
+      onGedcomxUpdated: () => {},
+      onWatchError: () => {},
+      onSidecarUpdated: () => {},
+      removeAllWatchListeners: () => {},
+      readSidecar: () => Promise.resolve(null)
     }
   })
 }

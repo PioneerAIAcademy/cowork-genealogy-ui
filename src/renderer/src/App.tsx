@@ -14,6 +14,7 @@ import ConflictsSection from './components/sections/ConflictsSection'
 import HypothesesSection from './components/sections/HypothesesSection'
 import TimelinesSection from './components/sections/TimelinesSection'
 import ProofSummariesSection from './components/sections/ProofSummariesSection'
+import SidecarPanel from './components/shared/SidecarPanel'
 import styles from './App.module.css'
 
 const sectionComponents: Record<string, React.ComponentType> = {
@@ -39,8 +40,8 @@ function WelcomeScreen(): React.JSX.Element {
         <div className={styles.welcomeOrnament}>Pioneer Academy</div>
         <h1 className={styles.welcomeTitle}>Research Viewer</h1>
         <p className={styles.welcomeDesc}>
-          Watch your AI genealogy research assistant work in real time.
-          Evidence gathered, hypotheses tested, proof summaries written.
+          Watch your AI genealogy research assistant work in real time. Evidence gathered,
+          hypotheses tested, proof summaries written.
         </p>
         <div className={styles.welcomeDivider}>&#9830;</div>
         <button className={styles.welcomeButton} onClick={selectFolder}>
@@ -98,6 +99,7 @@ function AppContent(): React.JSX.Element {
           <ActiveSection />
         </div>
       </div>
+      <SidecarPanel />
     </div>
   )
 }

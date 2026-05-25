@@ -7,6 +7,8 @@ import type { Assertion } from '../../lib/schema'
 import styles from './AssertionsSection.module.css'
 
 function AssertionCard({ assertion }: { assertion: Assertion }): React.JSX.Element {
+  const { openSidecar } = useResearchData()
+  const canOpenSidecar = Boolean(assertion.log_entry_id && assertion.record_persona_id)
   return (
     <Card
       id={assertion.id}
@@ -57,6 +59,18 @@ function AssertionCard({ assertion }: { assertion: Assertion }): React.JSX.Eleme
           <div className={styles.fieldLabel}>Persona</div>
           <div className={styles.fieldValue}>
             <code className={styles.personaId}>{assertion.record_persona_id}</code>
+            {canOpenSidecar && (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className={styles.personaLink}
+                  onClick={() => openSidecar(assertion.log_entry_id!, assertion.record_persona_id!)}
+                >
+                  View in record →
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

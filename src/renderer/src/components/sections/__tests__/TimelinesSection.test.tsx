@@ -16,22 +16,16 @@ vi.mock('../../../contexts/ResearchDataContext', async () => {
 })
 
 import { useResearchData } from '../../../contexts/ResearchDataContext'
+import { buildMockContext } from '../../../contexts/__tests__/mockContext'
 
 function mockResearch(overrides: Partial<ResearchData> = {}): void {
-  vi.mocked(useResearchData).mockReturnValue({
-    research: { ...patrickFlynnResearch, ...overrides },
-    gedcomx: patrickFlynnGedcomx,
-    error: null,
-    clearError: () => {},
-    lastUpdated: null,
-    folderPath: null,
-    devMode: false,
-    setDevMode: () => {},
-    getById: () => null,
-    selectFolder: async () => {},
-    activeSection: 'timelines',
-    setActiveSection: () => {}
-  })
+  vi.mocked(useResearchData).mockReturnValue(
+    buildMockContext({
+      research: { ...patrickFlynnResearch, ...overrides },
+      gedcomx: patrickFlynnGedcomx,
+      activeSection: 'timelines'
+    })
+  )
 }
 
 // The TimelinesSection wraps each timeline in a Card that defaults to
