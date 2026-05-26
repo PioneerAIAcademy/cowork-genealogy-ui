@@ -132,7 +132,7 @@ function setupIPC(): void {
           agentShouldHave: payload.agentShouldHave,
           notes: payload.notes
         },
-        viewerVersion: app.getVersion()
+        viewerVersion: app.getVersion() + (app.isPackaged ? '' : '-dev')
       })
 
       const envelope = JSON.stringify({

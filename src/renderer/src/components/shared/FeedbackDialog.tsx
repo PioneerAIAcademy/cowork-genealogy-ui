@@ -16,6 +16,8 @@ function formatBytes(bytes: number): string {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const EMAIL_STORAGE_KEY = 'feedback.email'
+// Must match MAX_FIELD_CHARS in src/main/feedback.ts (the canonical validator).
+const MAX_FIELD_CHARS = 10_000
 
 interface FeedbackDialogProps {
   onClose: () => void
@@ -79,11 +81,23 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
   }, [files, includeMedia])
 
   const emailValid = EMAIL_RE.test(email.trim())
+  const overLimitFields = useMemo(() => {
+    const fields: Array<[string, string]> = [
+      ['What you asked', userPrompt],
+      ['What the agent did', agentDid],
+      ['What it should have done', agentShouldHave],
+      ['Notes', notes]
+    ]
+    return fields
+      .filter(([, value]) => value.trim().length > MAX_FIELD_CHARS)
+      .map(([label]) => label)
+  }, [userPrompt, agentDid, agentShouldHave, notes])
   const canSend =
     emailValid &&
     userPrompt.trim().length > 0 &&
     agentDid.trim().length > 0 &&
-    agentShouldHave.trim().length > 0
+    agentShouldHave.trim().length > 0 &&
+    overLimitFields.length === 0
 
   const handleSend = useCallback(async () => {
     setSendState('sending')
@@ -301,6 +315,13 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
           </div>
         </div>
 
+        {overLimitFields.length > 0 && sendState !== 'success' && (
+          <div className={`${styles.toast} ${styles.toastError}`}>
+            {overLimitFields.length === 1
+              ? `"${overLimitFields[0]}" exceeds the ${MAX_FIELD_CHARS.toLocaleString()}-character limit. Trim it or attach the long text separately.`
+              : `${overLimitFields.length} fields exceed the ${MAX_FIELD_CHARS.toLocaleString()}-character limit: ${overLimitFields.map((f) => `"${f}"`).join(', ')}.`}
+          </div>
+        )}
         {sendState === 'success' && (
           <div className={`${styles.toast} ${styles.toastSuccess}`}>Feedback sent — thank you!</div>
         )}

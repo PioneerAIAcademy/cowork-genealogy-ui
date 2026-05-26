@@ -20,6 +20,9 @@ const TEXT_EXTS = new Set(['.json', '.md', '.txt', '.csv', '.tsv', '.yaml', '.ym
 const INDIVIDUAL_FILE_CAP_BYTES = 25 * 1024 * 1024
 const ZIP_CAP_BYTES = 35 * 1024 * 1024
 
+export const MAX_FIELD_CHARS = 10_000
+export const FEEDBACK_SCHEMA_VERSION = 1
+
 export type ProjectFile = {
   relativePath: string
   sizeBytes: number
@@ -128,10 +131,38 @@ export type FeedbackResult = {
   zipBytes: number
 }
 
+type NormalizedFields = {
+  email: string
+  userPrompt: string
+  agentDid: string
+  agentShouldHave: string
+  notes: string
+}
+
+function normalizeAndValidate(report: FeedbackReport): NormalizedFields {
+  const fields: NormalizedFields = {
+    email: report.email.trim().toLowerCase(),
+    userPrompt: report.userPrompt.trim(),
+    agentDid: report.agentDid.trim(),
+    agentShouldHave: report.agentShouldHave.trim(),
+    notes: (report.notes ?? '').trim()
+  }
+  for (const [name, value] of Object.entries(fields)) {
+    if (value.length > MAX_FIELD_CHARS) {
+      throw new Error(
+        `Feedback field "${name}" is ${value.length} characters, exceeding the ${MAX_FIELD_CHARS}-character limit.`
+      )
+    }
+  }
+  return fields
+}
+
 export async function buildFeedbackZip(options: FeedbackOptions): Promise<FeedbackResult> {
   const { folderPath, includeMedia, includeSessionLog, report, viewerVersion } = options
   const folderResolved = path.resolve(folderPath)
   const folderPrefix = folderResolved + path.sep
+
+  const normalized = normalizeAndValidate(report)
 
   const zip = new JSZip()
   const files = await walkProject(folderResolved)
@@ -177,12 +208,22 @@ export async function buildFeedbackZip(options: FeedbackOptions): Promise<Feedba
   zip.file(
     'FEEDBACK.md',
     renderFeedbackMarkdown({
-      report,
+      fields: normalized,
       timestamp,
       projectFolder: folderResolved,
       viewerVersion,
       sessionLogIncluded,
       skipped
+    })
+  )
+
+  zip.file(
+    '_feedback/feedback.json',
+    renderFeedbackJson({
+      fields: normalized,
+      submittedAt: timestamp,
+      viewerVersion,
+      projectFolderPath: folderResolved
     })
   )
 
@@ -211,40 +252,60 @@ export async function buildFeedbackZip(options: FeedbackOptions): Promise<Feedba
   }
 }
 
+function renderFeedbackJson(args: {
+  fields: NormalizedFields
+  submittedAt: string
+  viewerVersion: string
+  projectFolderPath: string
+}): string {
+  const payload = {
+    schema_version: FEEDBACK_SCHEMA_VERSION,
+    submitted_at: args.submittedAt,
+    viewer_version: args.viewerVersion,
+    platform: process.platform,
+    email: args.fields.email,
+    project_folder_path: args.projectFolderPath,
+    user_prompt: args.fields.userPrompt,
+    agent_did: args.fields.agentDid,
+    agent_should_have: args.fields.agentShouldHave,
+    notes: args.fields.notes
+  }
+  return JSON.stringify(payload, null, 2) + '\n'
+}
+
 function renderFeedbackMarkdown(args: {
-  report: FeedbackReport
+  fields: NormalizedFields
   timestamp: string
   projectFolder: string
   viewerVersion: string
   sessionLogIncluded: boolean
   skipped: string[]
 }): string {
-  const { report, timestamp, projectFolder, viewerVersion, sessionLogIncluded, skipped } = args
+  const { fields, timestamp, projectFolder, viewerVersion, sessionLogIncluded, skipped } = args
 
   const sections = [
     '# Feedback',
     '',
-    `- **From:** ${report.email}`,
+    `- **From:** ${fields.email}`,
     `- **When:** ${timestamp}`,
     `- **Viewer version:** ${viewerVersion}`,
     `- **Project folder:** ${projectFolder}`,
     '',
     '## What I asked',
     '',
-    report.userPrompt.trim(),
+    fields.userPrompt,
     '',
     '## What the agent did',
     '',
-    report.agentDid.trim(),
+    fields.agentDid,
     '',
     '## What it should have done',
     '',
-    report.agentShouldHave.trim()
+    fields.agentShouldHave
   ]
 
-  const notes = report.notes?.trim()
-  if (notes) {
-    sections.push('', '## Notes', '', notes)
+  if (fields.notes) {
+    sections.push('', '## Notes', '', fields.notes)
   }
 
   if (sessionLogIncluded) {
