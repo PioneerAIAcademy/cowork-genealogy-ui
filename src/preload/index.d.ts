@@ -21,7 +21,11 @@ export interface AppAPI {
   submitFeedback: (payload: {
     includeMedia: boolean
     includeSessionLog: boolean
-    userComment?: string
+    email: string
+    userPrompt: string
+    agentDid: string
+    agentShouldHave: string
+    notes?: string
   }) => Promise<{ ok: true; filename?: string }>
   readSidecar: (logId: string) => Promise<{ raw: string; mtime: number } | null>
 }

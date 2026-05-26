@@ -37,29 +37,25 @@ function doPost(e) {
     var folder = DriveApp.getFolderById(FOLDER_ID);
 
     var bytes = Utilities.base64Decode(payload.zipBase64);
-    var blob = Utilities.newBlob(bytes, 'application/zip', payload.filename);
-    var file = folder.createFile(blob);
+    var zipBlob = Utilities.newBlob(bytes, 'application/zip', payload.filename);
+    var file = folder.createFile(zipBlob);
 
-    var zipKB = Math.round((payload.zipBytes || bytes.length) / 1024);
-    var uncompressedKB = Math.round((payload.uncompressedBytes || 0) / 1024);
-    var fileCount = payload.fileCount || 0;
+    var zipKB = Math.round(bytes.length / 1024);
+    var email = payload.email || 'unknown';
+    var feedbackMd = extractFeedbackMarkdown(zipBlob);
 
     if (NOTIFICATION_EMAIL) {
       MailApp.sendEmail({
         to: NOTIFICATION_EMAIL,
-        subject: 'New Research Viewer Feedback (' + zipKB + ' KB zip, ' + fileCount + ' files)',
-        body: 'New feedback received.\n\n'
-            + 'Files: ' + fileCount + '\n'
-            + 'Zip size: ' + zipKB + ' KB\n'
-            + 'Uncompressed: ' + uncompressedKB + ' KB\n'
-            + 'Project folder: ' + (payload.projectFolder || 'unknown') + '\n'
-            + 'Viewer version: ' + (payload.viewerVersion || 'unknown') + '\n'
-            + 'User comment: ' + (payload.userComment || '(none)') + '\n\n'
-            + 'File: ' + file.getUrl()
+        subject: 'Research Viewer feedback from ' + email + ' (' + zipKB + ' KB)',
+        body: feedbackMd
+            + '\n\n---\n'
+            + 'Zip: ' + file.getUrl() + '\n'
+            + 'Size: ' + zipKB + ' KB\n'
       });
     }
 
-    Logger.log('Saved feedback: ' + payload.filename + ' (' + zipKB + ' KB, ' + fileCount + ' files)');
+    Logger.log('Saved feedback: ' + payload.filename + ' (' + zipKB + ' KB) from ' + email);
 
     return ContentService
       .createTextOutput(JSON.stringify({ ok: true, filename: payload.filename }))
@@ -70,6 +66,20 @@ function doPost(e) {
     return ContentService
       .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function extractFeedbackMarkdown(zipBlob) {
+  try {
+    var parts = Utilities.unzip(zipBlob);
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].getName() === 'FEEDBACK.md') {
+        return parts[i].getDataAsString();
+      }
+    }
+    return '(FEEDBACK.md not found in zip)';
+  } catch (err) {
+    return '(failed to read FEEDBACK.md: ' + err.message + ')';
   }
 }
 

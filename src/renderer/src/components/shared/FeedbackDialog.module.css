@@ -175,9 +175,47 @@
   cursor: not-allowed;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.optional {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-body);
+  font-size: 0.87rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
 .textarea {
   width: 100%;
-  min-height: 80px;
+  min-height: 70px;
   padding: var(--spacing-sm) var(--spacing-md);
   font-family: var(--font-body);
   font-size: 0.87rem;

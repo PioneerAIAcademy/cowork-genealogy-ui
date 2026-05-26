@@ -14,6 +14,9 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_STORAGE_KEY = 'feedback.email'
+
 interface FeedbackDialogProps {
   onClose: () => void
 }
@@ -28,7 +31,19 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
   const [includeMedia, setIncludeMedia] = useState(false)
   const [includeSessionLog, setIncludeSessionLog] = useState(true)
   const [showFileList, setShowFileList] = useState(false)
-  const [userComment, setUserComment] = useState('')
+
+  const [email, setEmail] = useState(() => {
+    try {
+      return localStorage.getItem(EMAIL_STORAGE_KEY) ?? ''
+    } catch {
+      return ''
+    }
+  })
+  const [userPrompt, setUserPrompt] = useState('')
+  const [agentDid, setAgentDid] = useState('')
+  const [agentShouldHave, setAgentShouldHave] = useState('')
+  const [notes, setNotes] = useState('')
+
   const [sendState, setSendState] = useState<SendState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -63,19 +78,31 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
     return { selectedFiles: selected, selectedBytes: sb, mediaCount: mc, mediaBytes: mb }
   }, [files, includeMedia])
 
-  const hasAnythingToSend =
-    selectedFiles.length > 0 ||
-    (includeSessionLog && hasSessionLog) ||
-    userComment.trim().length > 0
+  const emailValid = EMAIL_RE.test(email.trim())
+  const canSend =
+    emailValid &&
+    userPrompt.trim().length > 0 &&
+    agentDid.trim().length > 0 &&
+    agentShouldHave.trim().length > 0
 
   const handleSend = useCallback(async () => {
     setSendState('sending')
     setErrorMsg('')
     try {
+      const trimmedEmail = email.trim()
+      try {
+        localStorage.setItem(EMAIL_STORAGE_KEY, trimmedEmail)
+      } catch {
+        // Storage may be unavailable; not fatal.
+      }
       await window.api.submitFeedback({
         includeMedia,
         includeSessionLog,
-        userComment: userComment.trim() || undefined
+        email: trimmedEmail,
+        userPrompt: userPrompt.trim(),
+        agentDid: agentDid.trim(),
+        agentShouldHave: agentShouldHave.trim(),
+        notes: notes.trim() || undefined
       })
       setSendState('success')
       setTimeout(onClose, 1500)
@@ -83,7 +110,16 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
       setSendState('error')
       setErrorMsg(err instanceof Error ? err.message : 'Failed to send feedback')
     }
-  }, [includeMedia, includeSessionLog, userComment, onClose])
+  }, [
+    includeMedia,
+    includeSessionLog,
+    email,
+    userPrompt,
+    agentDid,
+    agentShouldHave,
+    notes,
+    onClose
+  ])
 
   const handleOverlayClick = useCallback(
     (e: React.MouseEvent) => {
@@ -111,6 +147,78 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
         </div>
 
         <div className={styles.body}>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="feedback-email">
+              Your email
+            </label>
+            <input
+              id="feedback-email"
+              type="email"
+              className={styles.input}
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={sendState === 'sending'}
+              autoComplete="email"
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="feedback-prompt">
+              What you asked the agent to do
+            </label>
+            <textarea
+              id="feedback-prompt"
+              className={styles.textarea}
+              placeholder="Paste or describe the prompt you gave..."
+              value={userPrompt}
+              onChange={(e) => setUserPrompt(e.target.value)}
+              disabled={sendState === 'sending'}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="feedback-did">
+              What the agent did
+            </label>
+            <textarea
+              id="feedback-did"
+              className={styles.textarea}
+              placeholder="What actually happened..."
+              value={agentDid}
+              onChange={(e) => setAgentDid(e.target.value)}
+              disabled={sendState === 'sending'}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="feedback-should">
+              What it should have done
+            </label>
+            <textarea
+              id="feedback-should"
+              className={styles.textarea}
+              placeholder="What you expected instead..."
+              value={agentShouldHave}
+              onChange={(e) => setAgentShouldHave(e.target.value)}
+              disabled={sendState === 'sending'}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="feedback-notes">
+              Notes <span className={styles.optional}>(optional)</span>
+            </label>
+            <textarea
+              id="feedback-notes"
+              className={styles.textarea}
+              placeholder="Anything else worth knowing..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={sendState === 'sending'}
+            />
+          </div>
+
           <div className={styles.summary}>
             <div>
               Including <strong>{selectedFiles.length}</strong>{' '}
@@ -185,14 +293,6 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
             </label>
           </div>
 
-          <textarea
-            className={styles.textarea}
-            placeholder="Optional: describe what happened, what you expected, or any other feedback..."
-            value={userComment}
-            onChange={(e) => setUserComment(e.target.value)}
-            disabled={sendState === 'sending'}
-          />
-
           <div className={styles.privacy}>
             Send packages your project folder as a zip and uploads it to a private Google Drive
             folder accessible only to the Pioneer Academy team. Audio and image files are excluded
@@ -215,7 +315,7 @@ export default function FeedbackDialog({ onClose }: FeedbackDialogProps): React.
           <button
             className={styles.sendBtn}
             onClick={handleSend}
-            disabled={!hasAnythingToSend || sendState === 'sending' || sendState === 'success'}
+            disabled={!canSend || sendState === 'sending' || sendState === 'success'}
           >
             {sendButtonLabel}
           </button>

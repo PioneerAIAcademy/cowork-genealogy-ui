@@ -104,11 +104,19 @@ export async function readSessionLog(folderPath: string): Promise<SessionLog> {
   }
 }
 
+export type FeedbackReport = {
+  email: string
+  userPrompt: string
+  agentDid: string
+  agentShouldHave: string
+  notes: string | undefined
+}
+
 export type FeedbackOptions = {
   folderPath: string
   includeMedia: boolean
   includeSessionLog: boolean
-  userComment: string | undefined
+  report: FeedbackReport
   viewerVersion: string
 }
 
@@ -121,7 +129,7 @@ export type FeedbackResult = {
 }
 
 export async function buildFeedbackZip(options: FeedbackOptions): Promise<FeedbackResult> {
-  const { folderPath, includeMedia, includeSessionLog, userComment, viewerVersion } = options
+  const { folderPath, includeMedia, includeSessionLog, report, viewerVersion } = options
   const folderResolved = path.resolve(folderPath)
   const folderPrefix = folderResolved + path.sep
 
@@ -156,22 +164,27 @@ export async function buildFeedbackZip(options: FeedbackOptions): Promise<Feedba
   }
 
   const timestamp = new Date().toISOString()
-  const meta = {
-    timestamp,
-    projectFolder: folderResolved,
-    viewerVersion,
-    userComment: userComment ?? null,
-    skipped: skipped.length > 0 ? skipped : undefined
-  }
-  zip.file('_feedback/feedback.json', JSON.stringify(meta, null, 2))
-
+  let sessionLogIncluded = false
   if (includeSessionLog) {
     const sessionLog = await readSessionLog(folderResolved)
     if (sessionLog.entries.length > 0) {
       const jsonl = sessionLog.entries.map((e) => JSON.stringify(e)).join('\n') + '\n'
       zip.file('_feedback/session-log.jsonl', jsonl)
+      sessionLogIncluded = true
     }
   }
+
+  zip.file(
+    'FEEDBACK.md',
+    renderFeedbackMarkdown({
+      report,
+      timestamp,
+      projectFolder: folderResolved,
+      viewerVersion,
+      sessionLogIncluded,
+      skipped
+    })
+  )
 
   const buf = await zip.generateAsync({
     type: 'nodebuffer',
@@ -196,4 +209,56 @@ export async function buildFeedbackZip(options: FeedbackOptions): Promise<Feedba
     uncompressedBytes,
     zipBytes: buf.length
   }
+}
+
+function renderFeedbackMarkdown(args: {
+  report: FeedbackReport
+  timestamp: string
+  projectFolder: string
+  viewerVersion: string
+  sessionLogIncluded: boolean
+  skipped: string[]
+}): string {
+  const { report, timestamp, projectFolder, viewerVersion, sessionLogIncluded, skipped } = args
+
+  const sections = [
+    '# Feedback',
+    '',
+    `- **From:** ${report.email}`,
+    `- **When:** ${timestamp}`,
+    `- **Viewer version:** ${viewerVersion}`,
+    `- **Project folder:** ${projectFolder}`,
+    '',
+    '## What I asked',
+    '',
+    report.userPrompt.trim(),
+    '',
+    '## What the agent did',
+    '',
+    report.agentDid.trim(),
+    '',
+    '## What it should have done',
+    '',
+    report.agentShouldHave.trim()
+  ]
+
+  const notes = report.notes?.trim()
+  if (notes) {
+    sections.push('', '## Notes', '', notes)
+  }
+
+  if (sessionLogIncluded) {
+    sections.push(
+      '',
+      '## Session log',
+      '',
+      'See `_feedback/session-log.jsonl` for the Claude Code conversation transcript (tool calls and results, no internal thinking).'
+    )
+  }
+
+  if (skipped.length > 0) {
+    sections.push('', '## Skipped files', '', ...skipped.map((s) => `- ${s}`))
+  }
+
+  return sections.join('\n') + '\n'
 }

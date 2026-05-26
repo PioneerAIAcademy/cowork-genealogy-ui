@@ -109,7 +109,11 @@ function setupIPC(): void {
       payload: {
         includeMedia?: boolean
         includeSessionLog?: boolean
-        userComment?: string
+        email: string
+        userPrompt: string
+        agentDid: string
+        agentShouldHave: string
+        notes?: string
       }
     ) => {
       const state = getCurrentState()
@@ -121,20 +125,21 @@ function setupIPC(): void {
         folderPath: state.folderPath,
         includeMedia: payload.includeMedia === true,
         includeSessionLog: payload.includeSessionLog !== false,
-        userComment: payload.userComment,
+        report: {
+          email: payload.email,
+          userPrompt: payload.userPrompt,
+          agentDid: payload.agentDid,
+          agentShouldHave: payload.agentShouldHave,
+          notes: payload.notes
+        },
         viewerVersion: app.getVersion()
       })
 
       const envelope = JSON.stringify({
         timestamp: new Date().toISOString(),
-        projectFolder: state.folderPath,
-        viewerVersion: app.getVersion(),
+        email: payload.email,
         filename: built.filename,
-        zipBase64: built.zipBase64,
-        fileCount: built.fileCount,
-        uncompressedBytes: built.uncompressedBytes,
-        zipBytes: built.zipBytes,
-        userComment: payload.userComment ?? null
+        zipBase64: built.zipBase64
       })
 
       // Production: Apps Script endpoint. Override with FEEDBACK_URL env var for local dev.

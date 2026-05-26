@@ -30,6 +30,10 @@ contextBridge.exposeInMainWorld('api', {
   submitFeedback: (payload: {
     includeMedia: boolean
     includeSessionLog: boolean
-    userComment?: string
+    email: string
+    userPrompt: string
+    agentDid: string
+    agentShouldHave: string
+    notes?: string
   }) => ipcRenderer.invoke('feedback:submit', payload)
 })
